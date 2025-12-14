@@ -1,12 +1,18 @@
-import { Document, Model, Schema } from "mongoose";
+import { Document, Model } from "mongoose";
+import { Request } from "express";
 
 export interface ICollection extends Document {
   id: string;
   name: string;
   slug: string;
-  image_url: string;
+  image_url?: string;
   products?: string[];
   isDelete?: boolean;
+}
+
+export interface RequestWithFile extends Request {
+  file?: Express.Multer.File;
+  body: any;
 }
 
 export type CollectionModel = {

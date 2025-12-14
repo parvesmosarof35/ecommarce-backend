@@ -19,7 +19,7 @@ const CollectionSchema = new Schema<ICollection, CollectionModel>(
     },
     image_url: {
       type: String,
-      required: [true, "Collection image URL is required"],
+      required: false,
     },
     products: [{
       type: Schema.Types.ObjectId,

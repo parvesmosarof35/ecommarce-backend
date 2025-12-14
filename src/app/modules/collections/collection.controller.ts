@@ -10,8 +10,8 @@ import status from "http-status";
  * Handles HTTP POST requests to /collection
  */
 const createCollection: RequestHandler = catchAsync(async (req, res) => {
-  // Call service layer to create collection in database
-  const result = await CollectionServices.createCollectionIntoDb(req.body);
+  // Call service layer to create collection in database with file upload
+  const result = await CollectionServices.createCollectionIntoDb(req as any);
   
   // Send standardized success response
   sendResponse(res, {
@@ -65,8 +65,8 @@ const getSingleCollection: RequestHandler = catchAsync(async (req, res) => {
  * Handles HTTP PUT requests to /collection/:id
  */
 const updateCollection: RequestHandler = catchAsync(async (req, res) => {
-  // Extract collection ID from URL parameters and update data from request body
-  const result = await CollectionServices.updateCollectionIntoDb(req.params.id, req.body);
+  // Call service layer to update collection in database with file upload
+  const result = await CollectionServices.updateCollectionIntoDb(req as any, req.params.id);
   
   // Send response with updated collection data
   sendResponse(res, {

@@ -1,15 +1,26 @@
 import collection from "./collection.model";
-import { ICollection } from "./collection.interface";
+import { ICollection, RequestWithFile } from "./collection.interface";
 import QueryBuilder from "../../builder/QueryBuilder";
 
 /**
- * Creates a new collection in the database
- * @param payload - Collection data including name, slug, image_url, and optional products
+ * Creates a new collection in the database with file upload
+ * @param req - Request object with file and collection data
  * @returns Promise<ICollection> - The created collection document
  */
-const createCollectionIntoDb = async (payload: ICollection) => {
-  const result = await collection.create(payload);
-  return result;
+const createCollectionIntoDb = async (req: RequestWithFile) => {
+  try {
+    const data = req.body as any;
+    const file = req.file?.path.replace(/\\/g, "/");
+
+    if (file) {
+      data.image_url = file;
+    }
+
+    const result = await collection.create(data);
+    return result;
+  } catch (error: any) {
+    throw new Error(error.message || "Failed to create collection");
+  }
 };
 
 /**
@@ -53,36 +64,42 @@ const getSingleCollectionFromDb = async (id: string) => {
 };
 
 /**
- * Updates a collection by ID with validation
+ * Updates a collection by ID with validation and file upload support
+ * @param req - Request object with file and update data
  * @param id - Collection ID to update
- * @param payload - Partial collection data to update
  * @returns Promise<ICollection | null> - Updated collection document or null if not found
  */
-const updateCollectionIntoDb = async (id: string, payload: Partial<ICollection>) => {
-  // Find and update collection with:
-  // - new: true returns the updated document
-  // - runValidators: true ensures schema validation on update
-  // - populate products to show updated product details
-  const result = await collection.findByIdAndUpdate(id, payload, {
-    new: true,
-    runValidators: true,
-  }).populate("products");
-  return result;
+const updateCollectionIntoDb = async (req: RequestWithFile, id: string) => {
+  try {
+    const data = req.body as any;
+    const file = req.file?.path.replace(/\\/g, "/");
+
+    if (file) {
+      data.image_url = file;
+    }
+
+    // Find and update collection with:
+    // - new: true returns the updated document
+    // - runValidators: true ensures schema validation on update
+    // - populate products to show updated product details
+    const result = await collection.findByIdAndUpdate(id, data, {
+      new: true,
+      runValidators: true,
+    }).populate("products");
+    return result;
+  } catch (error: any) {
+    throw new Error(error.message || "Failed to update collection");
+  }
 };
 
 /**
- * Soft deletes a collection by setting isDelete flag to true
+ * Hard deletes a collection by removing it from the database
  * @param id - Collection ID to delete
- * @returns Promise<ICollection | null> - Updated collection document or null if not found
+ * @returns Promise<ICollection | null> - Deleted collection document or null if not found
  */
 const deleteCollectionFromDb = async (id: string) => {
-  // Soft delete by setting isDelete flag instead of removing document
-  // This preserves data integrity and allows for recovery
-  const result = await collection.findByIdAndUpdate(
-    id,
-    { isDelete: true },
-    { new: true }
-  );
+  // Hard delete by removing the document from database
+  const result = await collection.findByIdAndDelete(id);
   return result;
 };
 
