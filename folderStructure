@@ -1,0 +1,31 @@
+mandirhohi\AmericanCarPlatesBackend\src> tree
+Folder PATH listing for volume Tamim
+Volume serial number is CECD-7D40
+D:.
+├───app
+│   ├───builder
+│   ├───config
+│   ├───errors
+│   ├───helper
+│   ├───interface
+│   ├───middlewares
+│   ├───modules
+│   │   ├───auth
+│   │   ├───blogs
+│   │   ├───channel
+│   │   ├───contact
+│   │   ├───current_subscribed_buyer
+│   │   ├───faq
+│   │   ├───message
+│   │   ├───payment_gateway
+│   │   ├───platesales
+│   │   ├───settings
+│   │   ├───subscription
+│   │   └───user
+│   ├───routes
+│   ├───shared
+│   └───utils
+│       └───emailcontext
+└───public
+    └───images
+PS D:\New folder\mandirhohi\AmericanCarPlatesBackend\src> 
