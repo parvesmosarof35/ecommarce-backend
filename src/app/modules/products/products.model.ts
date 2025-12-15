@@ -1,5 +1,5 @@
 import { Schema, model, Model } from "mongoose";
-import { IProduct, ProductModel } from "./products.interface";
+import { IProduct, ProductModel, KeyIngredient, SkinType } from "./products.interface";
 import AppError from "../../errors/AppError";
 import status from "http-status";
 
@@ -24,6 +24,17 @@ const ProductSchema = new Schema<IProduct, ProductModel>(
       required: [true, "Stock quantity is required"],
       min: [0, "Stock cannot be negative"],
     },
+    sku: {
+      type: String,
+      required: [true, "SKU is required"],
+      unique: true,
+      trim: true,
+      uppercase: true,
+    },
+    isFeatured: {
+      type: Boolean,
+      default: false,
+    },
     images_urls: {
       type: [String],
       validate: {
@@ -37,42 +48,29 @@ const ProductSchema = new Schema<IProduct, ProductModel>(
       type: String,
       trim: true,
     }],
-    skintype: [{
+    skintype: {
       type: String,
-      trim: true,
-    }],
+      enum: {
+        values: ["Dry", "Oily", "Combination", "Sensitive", "Normal"],
+        message: "Invalid skin type. Must be one of: Dry, Oily, Combination, Sensitive, Normal (case-sensitive)"
+      }
+    },
     ingredients: [{
       type: String,
-      trim: true,
+      enum: {
+        values: ["Hyaluronic Acid", "Vitamin C", "Retinol", "Niacinamide", "Peptides"],
+        message: "Invalid ingredient. Must be one of: Hyaluronic Acid, Vitamin C, Retinol, Niacinamide, Peptides (case-sensitive)"
+      }
     }],
     collections: [{
       type: Schema.Types.ObjectId,
       ref: "collections",
     }],
-    isDelete: {
-      type: Boolean,
-      default: false,
-    },
   },
   {
     timestamps: true,
   }
 );
-
-ProductSchema.pre("find", function (next) {
-  this.find({ isDelete: { $ne: true } });
-  next();
-});
-
-ProductSchema.pre("findOne", function (next) {
-  this.findOne({ isDelete: { $ne: true } });
-  next();
-});
-
-ProductSchema.pre("aggregate", function (next) {
-  this.pipeline().unshift({ $match: { isDelete: { $ne: true } } });
-  next();
-});
 
 ProductSchema.statics.isProductCustomId = async function (id: string) {
   const product = await this.findById(id);

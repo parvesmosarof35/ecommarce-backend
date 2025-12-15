@@ -87,12 +87,12 @@ const updateProduct: RequestHandler = catchAsync(async (req, res) => {
 });
 
 /**
- * Controller: Soft delete a product by ID
+ * Controller: Delete a product by ID
  * Only accessible by admin and superAdmin users
  * Handles HTTP DELETE requests to /product/:id
  */
 const deleteProduct: RequestHandler = catchAsync(async (req, res) => {
-  // Extract product ID from URL parameters for soft deletion
+  // Extract product ID from URL parameters for deletion
   const result = await ProductServices.deleteProductFromDb(req.params.id);
   
   // Send response confirming deletion

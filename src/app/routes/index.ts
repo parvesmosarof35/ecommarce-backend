@@ -9,6 +9,7 @@ import ProductRoutes from "../modules/products/products.route";
 import CollectionRoutes from "../modules/collections/collection.route";
 import ReviewRoutes from "../modules/reviews/reviews.route";
 import WishlistRoutes from "../modules/wishlists/wishlists.route";
+import CartRoutes from "../modules/cart/cart.route";
 
 
 
@@ -42,6 +43,10 @@ const moduleRoutes = [
   {
     path: "/wishlist",
     route: WishlistRoutes,
+  },
+  {
+    path: "/cart",
+    route: CartRoutes,
   },
   {
     path: "/setting",

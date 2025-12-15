@@ -19,13 +19,45 @@ const createProductIntoDb = async (payload: IProduct) => {
  * @returns Promise<{result: IProduct[], meta: object}> - Products array with rating data and metadata
  */
 const getAllProductsFromDb = async (query: any) => {
+  // Handle custom sorting options
+  const originalSort = query.sort;
+  let modifiedQuery = { ...query };
+
+  if (query.sort) {
+    switch (query.sort) {
+      case 'bestSelling':
+        // Sort by stock_quantity (assuming higher stock means more sales)
+        modifiedQuery.sort = 'stock_quantity';
+        break;
+      case 'bestRating':
+        // Use aggregation pipeline for real rating sort
+        return getProductsSortedByRating(query);
+      case 'priceLowToHigh':
+        modifiedQuery.sort = 'price';
+        break;
+      case 'priceHighToLow':
+        modifiedQuery.sort = '-price';
+        break;
+      case 'newest':
+        modifiedQuery.sort = '-createdAt';
+        break;
+      case 'oldest':
+        modifiedQuery.sort = 'createdAt';
+        break;
+      default:
+        // Use the original sort parameter
+        modifiedQuery.sort = originalSort;
+        break;
+    }
+  }
+
   // Use QueryBuilder for advanced query operations
   // - Search in name and description fields
   // - Apply filters, sorting, pagination
   // - Populate collections array to show collection details
   const productQuery = new QueryBuilder(
     product.find().populate("collections"),
-    query
+    modifiedQuery
   )
     .search(["name", "description"])
     .filter()
@@ -51,6 +83,142 @@ const getAllProductsFromDb = async (query: any) => {
   return {
     result: productsWithRatings,
     meta,
+  };
+};
+
+/**
+ * Helper function to get products sorted by rating using aggregation
+ */
+const getProductsSortedByRating = async (query: any) => {
+  // Build aggregation pipeline with rating data
+  const pipeline: any[] = [
+    // Add rating data from reviews collection
+    {
+      $lookup: {
+        from: 'reviews',
+        localField: '_id',
+        foreignField: 'product',
+        as: 'reviews'
+      }
+    },
+    // Calculate average rating and total reviews
+    {
+      $addFields: {
+        averageRating: {
+          $cond: {
+            if: { $gt: [{ $size: '$reviews' }, 0] },
+            then: {
+              $divide: [
+                { $sum: '$reviews.rating' },
+                { $size: '$reviews' }
+              ]
+            },
+            else: 0
+          }
+        },
+        totalReviews: { $size: '$reviews' }
+      }
+    },
+    // Remove the reviews array to clean up the output
+    {
+      $project: {
+        reviews: 0
+      }
+    }
+  ];
+
+  // Add search stage if searchTerm exists
+  if (query.searchTerm) {
+    pipeline.unshift({
+      $match: {
+        $or: [
+          { name: { $regex: query.searchTerm, $options: 'i' } },
+          { description: { $regex: query.searchTerm, $options: 'i' } }
+        ]
+      }
+    });
+  }
+
+  // Add filter stages for other query parameters
+  if (query.categories) {
+    const categories = Array.isArray(query.categories) ? query.categories : [query.categories];
+    pipeline.push({
+      $match: { categories: { $in: categories } }
+    });
+  }
+
+  if (query.skintype) {
+    pipeline.push({
+      $match: { skintype: query.skintype }
+    });
+  }
+
+  if (query.ingredients) {
+    const ingredients = Array.isArray(query.ingredients) ? query.ingredients : [query.ingredients];
+    pipeline.push({
+      $match: { ingredients: { $in: ingredients } }
+    });
+  }
+
+  if (query.isFeatured) {
+    pipeline.push({
+      $match: { isFeatured: query.isFeatured === 'true' }
+    });
+  }
+
+  // Add collections lookup
+  pipeline.push({
+    $lookup: {
+      from: 'collections',
+      localField: 'collections',
+      foreignField: '_id',
+      as: 'collections'
+    }
+  });
+
+  // Sort by rating (descending)
+  pipeline.push({
+    $sort: { averageRating: -1, totalReviews: -1 }
+  });
+
+  // Add pagination
+  const page = parseInt(query.page) || 1;
+  const limit = parseInt(query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  pipeline.push(
+    { $skip: skip },
+    { $limit: limit }
+  );
+
+  // Execute aggregation
+  const result = await product.aggregate(pipeline);
+
+  // Get total count for pagination metadata
+  const countPipeline = [...pipeline];
+  // Remove pagination stages for count
+  countPipeline.splice(-2, 2);
+  // Remove sort stage for count
+  const sortIndex = countPipeline.findIndex(stage => stage.$sort);
+  if (sortIndex !== -1) {
+    countPipeline.splice(sortIndex, 1);
+  }
+
+  const countResult = await product.aggregate([
+    ...countPipeline,
+    { $count: 'total' }
+  ]);
+
+  const total = countResult.length > 0 ? countResult[0].total : 0;
+
+  return {
+    result,
+    meta: {
+      page,
+      limit,
+      total,
+      totalPage: Math.ceil(total / limit)
+    }
   };
 };
 
@@ -112,18 +280,13 @@ const updateProductIntoDb = async (id: string, payload: Partial<IProduct>) => {
 };
 
 /**
- * Soft deletes a product by setting isDelete flag to true
+ * Hard deletes a product by ID
  * @param id - Product ID to delete
- * @returns Promise<IProduct | null> - Updated product document or null if not found
+ * @returns Promise<IProduct | null> - Deleted product document or null if not found
  */
 const deleteProductFromDb = async (id: string) => {
-  // Soft delete by setting isDelete flag instead of removing document
-  // This preserves data integrity and allows for recovery
-  const result = await product.findByIdAndUpdate(
-    id,
-    { isDelete: true },
-    { new: true }
-  );
+  // Hard delete by removing the document from database
+  const result = await product.findByIdAndDelete(id);
   return result;
 };
 
