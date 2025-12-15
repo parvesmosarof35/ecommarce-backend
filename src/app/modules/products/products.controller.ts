@@ -56,8 +56,8 @@ const getAllProducts: RequestHandler = catchAsync(async (req, res) => {
  * Handles HTTP GET requests to /product/:id
  */
 const getSingleProduct: RequestHandler = catchAsync(async (req, res) => {
-  // Extract product ID from URL parameters
-  const result = await ProductServices.getSingleProductFromDb(req.params.id);
+  // Extract product ID from URL parameters and query params for reviews pagination
+  const result = await ProductServices.getSingleProductFromDb(req.params.id, req.query);
   
   // Send response with single product data
   sendResponse(res, {

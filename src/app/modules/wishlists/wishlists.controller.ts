@@ -26,65 +26,6 @@ const addToWishlist: RequestHandler = catchAsync(async (req, res) => {
 });
 
 /**
- * Controller: Get all wishlist items with filtering and pagination
- * Accessible by admin and superAdmin users
- * Handles HTTP GET requests to /wishlist
- */
-const getAllWishlistItems: RequestHandler = catchAsync(async (req, res) => {
-  // Extract query parameters for filtering, pagination
-  const result = await WishlistServices.getAllWishlistItemsFromDb(req.query);
-  
-  // Send response with wishlist items and pagination metadata
-  sendResponse(res, {
-    statusCode: status.OK,
-    success: true,
-    message: "Wishlist items retrieved successfully",
-    meta: result.meta,
-    data: result.result,
-  });
-});
-
-/**
- * Controller: Get a single wishlist item by ID
- * Accessible by the wishlist owner or admin/superAdmin
- * Handles HTTP GET requests to /wishlist/:id
- */
-const getSingleWishlistItem: RequestHandler = catchAsync(async (req, res) => {
-  // Extract wishlist item ID from URL parameters
-  const result = await WishlistServices.getSingleWishlistItemFromDb(req.params.id);
-  
-  // Send response with single wishlist item data
-  sendResponse(res, {
-    statusCode: status.OK,
-    success: true,
-    message: "Wishlist item retrieved successfully",
-    data: result,
-  });
-});
-
-/**
- * Controller: Get all wishlist items for a specific user
- * Accessible by the user themselves or admin/superAdmin
- * Handles HTTP GET requests to /wishlist/user/:userId
- */
-const getWishlistByUser: RequestHandler = catchAsync(async (req, res) => {
-  // Extract user ID from URL parameters
-  const { userId } = req.params;
-  
-  // Call service to get user's wishlist
-  const result = await WishlistServices.getWishlistByUser(userId, req.query);
-  
-  // Send response with user's wishlist and pagination metadata
-  sendResponse(res, {
-    statusCode: status.OK,
-    success: true,
-    message: "User wishlist retrieved successfully",
-    meta: result.meta,
-    data: result.result,
-  });
-});
-
-/**
  * Controller: Get current user's wishlist
  * Accessible by authenticated users
  * Handles HTTP GET requests to /wishlist/my-wishlist
@@ -151,24 +92,6 @@ const removeFromWishlist: RequestHandler = catchAsync(async (req, res) => {
 });
 
 /**
- * Controller: Soft delete a wishlist item by ID
- * Accessible by the wishlist owner or admin/superAdmin
- * Handles HTTP DELETE requests to /wishlist/:id
- */
-const deleteWishlistItem: RequestHandler = catchAsync(async (req, res) => {
-  // Extract wishlist item ID from URL parameters for soft deletion
-  const result = await WishlistServices.deleteWishlistItemFromDb(req.params.id);
-  
-  // Send response confirming deletion
-  sendResponse(res, {
-    statusCode: status.OK,
-    success: true,
-    message: "Wishlist item deleted successfully",
-    data: result,
-  });
-});
-
-/**
  * Controller: Clear all items from user's wishlist
  * Accessible by authenticated users
  * Handles HTTP DELETE requests to /wishlist/clear
@@ -212,13 +135,9 @@ const getMyWishlistCount: RequestHandler = catchAsync(async (req, res) => {
 
 const WishlistControllers = {
   addToWishlist,
-  getAllWishlistItems,
-  getSingleWishlistItem,
-  getWishlistByUser,
   getMyWishlist,
   checkIfProductInWishlist,
   removeFromWishlist,
-  deleteWishlistItem,
   clearMyWishlist,
   getMyWishlistCount,
 };

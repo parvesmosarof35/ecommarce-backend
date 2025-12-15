@@ -1,6 +1,7 @@
 import review from "./reviews.model";
 import { IReview } from "./reviews.interface";
 import QueryBuilder from "../../builder/QueryBuilder";
+import { Types } from "mongoose";
 
 /**
  * Creates a new review in the database
@@ -141,18 +142,23 @@ const deleteReviewFromDb = async (id: string) => {
 };
 
 /**
- * Calculates average rating for a product
+ * Calculates average rating and total review count for a product
  * @param productId - Product ID to calculate average rating for
- * @returns Promise<number> - Average rating (0 if no reviews found)
+ * @returns Promise<{averageRating: number, totalReviews: number}> - Average rating and total reviews (0 if no reviews found)
  */
 const getAverageRatingForProduct = async (productId: string) => {
-  // Calculate average rating for all reviews of a specific product
+  // Convert string ID to ObjectId for proper matching
+  const productObjectId = new Types.ObjectId(productId);
+  
+  // Calculate average rating and total reviews for all reviews of a specific product
   const result = await review.aggregate([
-    { $match: { product_id: productId, isDelete: { $ne: true } } },
+    { $match: { product_id: productObjectId, isDelete: { $ne: true } } },
     { $group: { _id: "$product_id", averageRating: { $avg: "$rating" }, totalReviews: { $sum: 1 } } }
   ]);
 
-  return result.length > 0 ? result[0].averageRating : 0;
+  return result.length > 0 
+    ? { averageRating: result[0].averageRating, totalReviews: result[0].totalReviews }
+    : { averageRating: 0, totalReviews: 0 };
 };
 
 const ReviewServices = {

@@ -1,6 +1,7 @@
 import product from "./products.model";
 import { IProduct } from "./products.interface";
 import QueryBuilder from "../../builder/QueryBuilder";
+import ReviewServices from "../reviews/reviews.services";
 
 /**
  * Creates a new product in the database
@@ -15,7 +16,7 @@ const createProductIntoDb = async (payload: IProduct) => {
 /**
  * Retrieves all products with advanced filtering, searching, and pagination
  * @param query - Query parameters for search, filter, sort, pagination
- * @returns Promise<{result: IProduct[], meta: object}> - Products array and metadata
+ * @returns Promise<{result: IProduct[], meta: object}> - Products array with rating data and metadata
  */
 const getAllProductsFromDb = async (query: any) => {
   // Use QueryBuilder for advanced query operations
@@ -35,21 +36,61 @@ const getAllProductsFromDb = async (query: any) => {
   const result = await productQuery.modelQuery;
   const meta = await productQuery.countTotal();
 
+  // Add rating data to each product
+  const productsWithRatings = await Promise.all(
+    result.map(async (product: any) => {
+      const ratingData = await ReviewServices.getAverageRatingForProduct(product._id.toString());
+      return {
+        ...product.toObject(),
+        averageRating: ratingData.averageRating,
+        totalReviews: ratingData.totalReviews,
+      };
+    })
+  );
+
   return {
-    result,
+    result: productsWithRatings,
     meta,
   };
 };
 
 /**
- * Retrieves a single product by ID with populated collections
+ * Retrieves a single product by ID with populated collections and reviews
  * @param id - Product ID
- * @returns Promise<IProduct | null> - Single product document or null if not found
+ * @param query - Query parameters for reviews pagination (limit, page, sort)
+ * @returns Promise<IProduct | null> - Single product document with reviews or null if not found
  */
-const getSingleProductFromDb = async (id: string) => {
+const getSingleProductFromDb = async (id: string, query: any = {}) => {
   // Find product by ID and populate collections array to show collection details
-  const result = await product.findById(id).populate("collections");
-  return result;
+  const productData = await product.findById(id).populate("collections");
+  
+  if (!productData) {
+    return null;
+  }
+
+  // Get reviews for this product with pagination support from query parameters
+  // Default pagination if not provided: limit 10, page 1, sorted by newest first
+  const reviewsQuery = {
+    limit: query.limit || "10",
+    page: query.page || "1",
+    sort: query.sort || "-createdAt"
+  };
+  
+  const reviewsResult = await ReviewServices.getReviewsByProduct(id, reviewsQuery);
+  
+  // Get rating data
+  const ratingData = await ReviewServices.getAverageRatingForProduct(id);
+
+  // Convert product to object and add reviews and rating data
+  const productWithReviews = {
+    ...productData.toObject(),
+    reviews: reviewsResult.result,
+    reviewsMeta: reviewsResult.meta,
+    averageRating: ratingData.averageRating,
+    totalReviews: ratingData.totalReviews,
+  };
+
+  return productWithReviews;
 };
 
 /**
