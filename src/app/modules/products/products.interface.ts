@@ -7,6 +7,9 @@ export interface IProduct extends Document {
   price: number;
   stock_quantity: number;
   images_urls: string[];
+  categories?: string[];
+  skintype?: string[];
+  ingredients?: string[];
   collections?: string[];
   isDelete?: boolean;
 }

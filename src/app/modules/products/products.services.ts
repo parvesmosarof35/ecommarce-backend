@@ -86,35 +86,6 @@ const deleteProductFromDb = async (id: string) => {
   return result;
 };
 
-/**
- * Retrieves products within a specified price range
- * @param minPrice - Minimum price filter
- * @param maxPrice - Maximum price filter
- * @param query - Additional query parameters for sort, pagination
- * @returns Promise<{result: IProduct[], meta: object}> - Filtered products array and metadata
- */
-const getProductsByPriceRange = async (minPrice: number, maxPrice: number, query: any) => {
-  // Find products where price is between minPrice and maxPrice (inclusive)
-  // This enables the "Price Filter" functionality you specified
-  const productQuery = new QueryBuilder(
-    product.find({
-      price: { $gte: minPrice, $lte: maxPrice }
-    }).populate("collections"),
-    query
-  )
-    .search(["name", "description"])
-    .sort()
-    .paginate()
-    .fields();
-
-  const result = await productQuery.modelQuery;
-  const meta = await productQuery.countTotal();
-
-  return {
-    result,
-    meta,
-  };
-};
 
 /**
  * Retrieves products that belong to a specific collection
@@ -144,53 +115,7 @@ const getProductsByCollection = async (collectionId: string, query: any) => {
   };
 };
 
-/**
- * Retrieves newest products sorted by creation date (most recent first)
- * @param query - Query parameters for pagination
- * @returns Promise<{result: IProduct[], meta: object}> - Newest products array and metadata
- */
-const getNewestProducts = async (query: any) => {
-  // Sort products by createdAt in descending order (-1) to get newest first
-  // This enables the "Newest" filter functionality you specified
-  const productQuery = new QueryBuilder(
-    product.find().populate("collections").sort({ createdAt: -1 }),
-    query
-  )
-    .paginate()
-    .fields();
 
-  const result = await productQuery.modelQuery;
-  const meta = await productQuery.countTotal();
-
-  return {
-    result,
-    meta,
-  };
-};
-
-/**
- * Retrieves oldest products sorted by creation date (oldest first)
- * @param query - Query parameters for pagination
- * @returns Promise<{result: IProduct[], meta: object}> - Oldest products array and metadata
- */
-const getOldestProducts = async (query: any) => {
-  // Sort products by createdAt in ascending order (1) to get oldest first
-  // This enables the "Oldest" filter functionality you specified
-  const productQuery = new QueryBuilder(
-    product.find().populate("collections").sort({ createdAt: 1 }),
-    query
-  )
-    .paginate()
-    .fields();
-
-  const result = await productQuery.modelQuery;
-  const meta = await productQuery.countTotal();
-
-  return {
-    result,
-    meta,
-  };
-};
 
 const ProductServices = {
   createProductIntoDb,
@@ -198,10 +123,7 @@ const ProductServices = {
   getSingleProductFromDb,
   updateProductIntoDb,
   deleteProductFromDb,
-  getProductsByPriceRange,
   getProductsByCollection,
-  getNewestProducts,
-  getOldestProducts,
 };
 
 export default ProductServices;

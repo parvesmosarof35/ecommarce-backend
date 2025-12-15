@@ -33,24 +33,56 @@ class QueryBuilder<T> {
 
   filter() {
     let queryObject = { ...this.query };
+    
+    // Handle maxPrice range filtering
     if (this.query && this.query.maxPrice) {
-      queryObject = {
-        price: {
-          $gte: Number(this.query.minPrice),
-          $lte: Number(this.query.maxPrice),
-        },
+      queryObject.price = {
+        $gte: Number(this.query.minPrice) || 0,
+        $lte: Number(this.query.maxPrice),
       };
     }
+    
+    // Handle maxpricerange (alternative parameter name)
+    if (this.query && this.query.maxpricerange) {
+      queryObject.price = {
+        $gte: Number(this.query.minPrice) || 0,
+        $lte: Number(this.query.maxpricerange),
+      };
+    }
+    
     if (this.query?.releaseDate) {
-      queryObject = {
-        releaseDate: {
-          $gte: this.query?.releaseDate as string,
-          $lte: this.query?.releaseDate as string,
-        },
+      queryObject.releaseDate = {
+        $gte: this.query?.releaseDate as string,
+        $lte: this.query?.releaseDate as string,
       };
     }
 
-    const excludeField = ["searchTerm", "sort", "limit", "page", "fields"];
+    // Handle categories filtering
+    if (this.query?.categories) {
+      const categories = Array.isArray(this.query.categories) 
+        ? this.query.categories 
+        : [this.query.categories];
+      queryObject.categories = { $in: categories };
+    }
+
+    // Handle skintype filtering
+    if (this.query?.skintype) {
+      const skinTypes = Array.isArray(this.query.skintype) 
+        ? this.query.skintype 
+        : [this.query.skintype];
+      queryObject.skintype = { $in: skinTypes };
+    }
+
+    // Handle ingredients filtering
+    if (this.query?.ingredients) {
+      const ingredients = Array.isArray(this.query.ingredients) 
+        ? this.query.ingredients 
+        : [this.query.ingredients];
+      queryObject.ingredients = { $in: ingredients };
+    }
+
+    // Remove only non-filter fields that are not part of the query conditions
+    const excludeField = ["searchTerm", "sort", "limit", "page", "fields", "minPrice", "maxPrice", "maxpricerange", "releaseDate"];
     excludeField.forEach((el) => delete queryObject[el]);
 
     this.modelQuery = this.modelQuery.find(queryObject as FilterQuery<T>);

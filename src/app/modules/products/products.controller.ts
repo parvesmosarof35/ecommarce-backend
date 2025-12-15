@@ -10,8 +10,17 @@ import status from "http-status";
  * Handles HTTP POST requests to /product
  */
 const createProduct: RequestHandler = catchAsync(async (req, res) => {
+  // Handle uploaded images from multer
+  const payload = req.body;
+  
+  // If files are uploaded, add their paths to payload with normalized paths
+  if (req.files && Array.isArray(req.files)) {
+    const imageFiles = req.files as Express.Multer.File[];
+    payload.images_urls = imageFiles.map(file => file.path.replace(/\\/g, '/'));
+  }
+  
   // Call service layer to create product in database
-  const result = await ProductServices.createProductIntoDb(req.body);
+  const result = await ProductServices.createProductIntoDb(payload);
   
   // Send standardized success response
   sendResponse(res, {
@@ -95,31 +104,6 @@ const deleteProduct: RequestHandler = catchAsync(async (req, res) => {
   });
 });
 
-/**
- * Controller: Get products filtered by price range
- * Publicly accessible endpoint
- * Handles HTTP GET requests to /product/price-range?minPrice=X&maxPrice=Y
- */
-const getProductsByPriceRange: RequestHandler = catchAsync(async (req, res) => {
-  // Extract price range from query parameters
-  const { minPrice, maxPrice } = req.query;
-  
-  // Call service to filter products by price range
-  const result = await ProductServices.getProductsByPriceRange(
-    Number(minPrice),
-    Number(maxPrice),
-    req.query
-  );
-  
-  // Send response with filtered products and pagination metadata
-  sendResponse(res, {
-    statusCode: status.OK,
-    success: true,
-    message: "Products retrieved successfully by price range",
-    meta: result.meta,
-    data: result.result,
-  });
-});
 
 /**
  * Controller: Get products that belong to a specific collection
@@ -143,43 +127,7 @@ const getProductsByCollection: RequestHandler = catchAsync(async (req, res) => {
   });
 });
 
-/**
- * Controller: Get newest products sorted by creation date
- * Publicly accessible endpoint
- * Handles HTTP GET requests to /product/newest
- */
-const getNewestProducts: RequestHandler = catchAsync(async (req, res) => {
-  // Call service to get newest products (sorted by createdAt descending)
-  const result = await ProductServices.getNewestProducts(req.query);
-  
-  // Send response with newest products and pagination metadata
-  sendResponse(res, {
-    statusCode: status.OK,
-    success: true,
-    message: "Newest products retrieved successfully",
-    meta: result.meta,
-    data: result.result,
-  });
-});
 
-/**
- * Controller: Get oldest products sorted by creation date
- * Publicly accessible endpoint
- * Handles HTTP GET requests to /product/oldest
- */
-const getOldestProducts: RequestHandler = catchAsync(async (req, res) => {
-  // Call service to get oldest products (sorted by createdAt ascending)
-  const result = await ProductServices.getOldestProducts(req.query);
-  
-  // Send response with oldest products and pagination metadata
-  sendResponse(res, {
-    statusCode: status.OK,
-    success: true,
-    message: "Oldest products retrieved successfully",
-    meta: result.meta,
-    data: result.result,
-  });
-});
 
 const ProductControllers = {
   createProduct,
@@ -187,10 +135,7 @@ const ProductControllers = {
   getSingleProduct,
   updateProduct,
   deleteProduct,
-  getProductsByPriceRange,
   getProductsByCollection,
-  getNewestProducts,
-  getOldestProducts,
 };
 
 export default ProductControllers;

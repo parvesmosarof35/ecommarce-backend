@@ -24,9 +24,26 @@ const ProductSchema = new Schema<IProduct, ProductModel>(
       required: [true, "Stock quantity is required"],
       min: [0, "Stock cannot be negative"],
     },
-    images_urls: [{
+    images_urls: {
+      type: [String],
+      validate: {
+        validator: function(urls: string[]) {
+          return urls.length <= 8;
+        },
+        message: "Maximum 8 images allowed per product"
+      }
+    },
+    categories: [{
       type: String,
-      required: [true, "Product image URL is required"],
+      trim: true,
+    }],
+    skintype: [{
+      type: String,
+      trim: true,
+    }],
+    ingredients: [{
+      type: String,
+      trim: true,
     }],
     collections: [{
       type: Schema.Types.ObjectId,
