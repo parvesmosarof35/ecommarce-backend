@@ -1,7 +1,7 @@
 // Products API Postman Documentation
 // Base URL: http://localhost:5000/api/v1/products
 
-// ## **POST /api/v1/products - Create Product**
+// ## **POST /api/v1/products - Create Product** done
 
 // ### **Request Setup:**
 // - **Method**: `POST`
@@ -55,7 +55,7 @@
 
 // ---
 
-// ## **GET /api/v1/products - Get All Products**
+// ## **GET /api/v1/products - Get All Products** done
 
 // ### **Request Setup:**
 // - **Method**: `GET`
@@ -65,7 +65,7 @@
 
 // ### **Query Parameters (Optional):**
 // ```
-// ?limit=10&page=1&sort=bestSelling&searchTerm=serum&categories=Serums&skintype=Normal&ingredients=Vitamin C&isFeatured=true
+// ?limit=10&page=1&sort=priceLowToHigh&searchTerm=serum&categories=Serums&skintype=Normal&ingredients=Hyaluronic Acid,Vitamin C&collections=60f1b2b3c4d5e6f7g8h9i0j1&isFeatured=true
 // ```
 
 // ### **Sorting Options:**
@@ -111,7 +111,7 @@
 
 // ---
 
-// ## **GET /api/v1/products/:id - Get Single Product**
+// ## **GET /api/v1/products/:id - Get Single Product** done
 
 // ### **Request Setup:**
 // - **Method**: `GET`
@@ -167,7 +167,7 @@
 
 // ---
 
-// ## **PUT /api/v1/products/:id - Update Product**
+// ## **PUT /api/v1/products/:id - Update Product** done
 
 // ### **Request Setup:**
 // - **Method**: `PUT`
@@ -213,7 +213,7 @@
 
 // ---
 
-// ## **DELETE /api/v1/products/:id - Delete Product**
+// ## **DELETE /api/v1/products/:id - Delete Product** 
 
 // ### **Request Setup:**
 // - **Method**: `DELETE`
@@ -240,7 +240,7 @@
 
 // ---
 
-// ## **GET /api/v1/products/collection/:collectionId - Get Products by Collection**
+// ## **GET /api/v1/products/collection/:collectionId - Get Products by Collection** done
 
 // ### **Request Setup:**
 // - **Method**: `GET`
