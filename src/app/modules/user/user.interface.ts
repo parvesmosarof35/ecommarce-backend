@@ -8,7 +8,7 @@ export interface UserResponse {
 
 export type TUser = {
   id: string;
-  role: "buyer" | "seller" | "admin";
+  role: "buyer" | "seller" | "admin" | "superAdmin";
   gender: "Male" | "Female" | "Others";
   fastname: string;
   lastname: string;

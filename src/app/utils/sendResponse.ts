@@ -7,12 +7,18 @@ type TMeta = {
 	totalPage: number;
 };
 
+type TErrorSources = {
+	path: string | number;
+	message: string;
+}[];
+
 type TResponse<T> = {
 	statusCode: number;
 	success: boolean;
 	message?: string;
 	meta?: TMeta;
 	data: T;
+	errorSources?: TErrorSources;
 };
 
 const sendResponse = <T>(res: Response, data: TResponse<T>) => {
@@ -20,7 +26,8 @@ const sendResponse = <T>(res: Response, data: TResponse<T>) => {
 		success: data.success,
 		message: data.message,
 		meta: data.meta,
-		data: data.data
+		data: data.data,
+		...(data.errorSources && { errorSources: data.errorSources })
 	});
 };
 

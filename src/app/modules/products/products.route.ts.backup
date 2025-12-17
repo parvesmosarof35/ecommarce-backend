@@ -40,12 +40,6 @@ router.post(
       if (req.body.ingredients && typeof req.body.ingredients === 'string') {
         req.body.ingredients = req.body.ingredients.split(',').map((item: string) => item.trim());
       }
-      // collections is now an array, filter out empty strings
-      if (req.body.collections && typeof req.body.collections === 'string') {
-        req.body.collections = req.body.collections.split(',').map((item: string) => item.trim()).filter((item: string) => item !== '');
-      } else if (Array.isArray(req.body.collections)) {
-        req.body.collections = req.body.collections.filter((item: any) => item !== '' && item !== null && item !== undefined);
-      }
       
       // Handle uploaded images
       if (req.files && Array.isArray(req.files)) {
@@ -92,12 +86,6 @@ router.put(
       // ingredients is now an array, case-sensitive (exact match required)
       if (req.body.ingredients && typeof req.body.ingredients === 'string') {
         req.body.ingredients = req.body.ingredients.split(',').map((item: string) => item.trim());
-      }
-      // collections is now an array, filter out empty strings
-      if (req.body.collections && typeof req.body.collections === 'string') {
-        req.body.collections = req.body.collections.split(',').map((item: string) => item.trim()).filter((item: string) => item !== '');
-      } else if (Array.isArray(req.body.collections)) {
-        req.body.collections = req.body.collections.filter((item: any) => item !== '' && item !== null && item !== undefined);
       }
       
       // Handle uploaded images for update

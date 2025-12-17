@@ -10,6 +10,8 @@ import CollectionRoutes from "../modules/collections/collection.route";
 import ReviewRoutes from "../modules/reviews/reviews.route";
 import WishlistRoutes from "../modules/wishlists/wishlists.route";
 import CartRoutes from "../modules/cart/cart.route";
+import PaymentRoutes from "../modules/payment/payment.routes";
+import OrderRoutes from "../modules/order/order.routes";
 
 
 
@@ -47,6 +49,14 @@ const moduleRoutes = [
   {
     path: "/cart",
     route: CartRoutes,
+  },
+  {
+    path: "/payment",
+    route: PaymentRoutes,
+  },
+  {
+    path: "/order",
+    route: OrderRoutes,
   },
   {
     path: "/setting",

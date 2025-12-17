@@ -8,6 +8,7 @@ import cron from "node-cron";
 import path from "path";
 import config from "./app/config";
 import router from "./app/routes";
+import PaymentController from "./app/modules/payment/payment.controller";
 import notFound from "./app/middlewares/notFound";
 import globalErrorHandelar from "./app/middlewares/globalErrorHandler";
 import AppError from "./app/errors/AppError";
@@ -27,6 +28,12 @@ declare global {
 const app = express();
 
 app.use(cookieParser());
+
+app.post(
+  "/api/v1/webhook-verify",
+  express.raw({ type: "application/json" }),
+  PaymentController.webhookHandler,
+);
 
 app.use(
   bodyParser.json({
