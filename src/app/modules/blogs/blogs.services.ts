@@ -4,6 +4,8 @@ import { BlogsResponse, RequestWithFile, TBlogs } from "./blogs.interface";
 import blogs from "./blogs.model";
 import QueryBuilder from "../../builder/QueryBuilder";
 import { search_query } from "./blogs.constant";
+import { deleteFromCloudinary, uploadImageToCloudinary } from "../../utils/cloudinary";
+import fs from "fs";
 
 const createBlogsIntoDb = async (
   req: RequestWithFile,
@@ -11,9 +13,21 @@ const createBlogsIntoDb = async (
 ): Promise<BlogsResponse> => {
   try {
     const data = req.body as any;
-    const file = req.file?.path.replace(/\\/g, "/");
+    const filePath = req.file?.path?.replace(/\\/g, "/");
 
-    data.photo = file;
+    if (!filePath) {
+      throw new AppError(status.BAD_REQUEST, "Photo is required", "");
+    }
+
+    const uploaded = await uploadImageToCloudinary(filePath, "blogs");
+    data.photo = uploaded.secure_url;
+    data.photoPublicId = uploaded.public_id;
+
+    try {
+      fs.unlinkSync(req.file?.path as string);
+    } catch {
+      
+    }
 
     const blogsBuilder = new blogs({ ...data, adminId });
     const result = await blogsBuilder.save();
@@ -87,11 +101,33 @@ const updateBlogsIntoDb = async (
       blogTitle?: string;
       content?: string;
       photo?: string;
+      photoPublicId?: string;
     } = {};
 
     if (blogTitle) updateData.blogTitle = blogTitle;
     if (content) updateData.content = content;
-    if (filePath) updateData.photo = filePath;
+
+    if (filePath) {
+      const existingBlog = await blogs.findById(id).select("photoPublicId");
+      const uploaded = await uploadImageToCloudinary(filePath, "blogs");
+
+      updateData.photo = uploaded.secure_url;
+      updateData.photoPublicId = uploaded.public_id;
+
+      try {
+        fs.unlinkSync(req.file?.path as string);
+      } catch {
+        
+      }
+
+      try {
+        if (existingBlog?.photoPublicId) {
+          await deleteFromCloudinary(existingBlog.photoPublicId);
+        }
+      } catch {
+        
+      }
+    }
 
     if (Object.keys(updateData).length === 0) {
       throw new AppError(status.BAD_REQUEST, "No data provided for update");

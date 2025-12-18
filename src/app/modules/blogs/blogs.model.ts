@@ -19,6 +19,10 @@ const TBlogsSchema = new Schema<TBlogs, BlogsModel>(
       type: String,
       required: [true, "Photo is required"],
     },
+    photoPublicId: {
+      type: String,
+      required: false,
+    },
     content: {
       type: String,
       required: [true, "Content is required"],

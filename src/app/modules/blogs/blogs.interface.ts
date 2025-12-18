@@ -4,6 +4,7 @@ export interface TBlogs {
   blogTitle: string;
   adminId: Types.ObjectId;
   photo: string;
+  photoPublicId?: string;
   content: string;
   isDelete: boolean;
 }
