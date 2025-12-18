@@ -1,15 +1,47 @@
 import { CreateOrderData, Order, OrderResponse, OrderListResponse } from './order.interface';
 import { ORDER_STATUS, PAYMENT_STATUS, DEFAULT_CURRENCY } from './order.constant';
+import OrderModel from './order.model';
+import product from '../products/products.model';
 
 // In-memory storage for orders (replace with database in production)
-let orders: Order[] = [];
-let orderIdCounter = 1;
+const normalizeOrder = (doc: any): Order => {
+  const items = Array.isArray(doc?.items)
+    ? doc.items.map((item: any) => ({
+        ...item,
+        productId: item?.productId != null ? String(item.productId) : item?.productId,
+      }))
+    : [];
+
+  return {
+    ...doc,
+    _id: doc?._id != null ? String(doc._id) : doc?._id,
+    customerId: doc?.customerId != null ? String(doc.customerId) : doc?.customerId,
+    items,
+  } as Order;
+};
+
+const decrementStockForOrderItems = async (items: any[]) => {
+  for (const item of items) {
+    const quantity = Number(item?.quantity ?? 0);
+    const productId = item?.productId;
+
+    if (!productId || !Number.isFinite(quantity) || quantity <= 0) continue;
+
+    const updated = await product.updateOne(
+      { _id: productId, stock_quantity: { $gte: quantity } },
+      { $inc: { stock_quantity: -quantity } }
+    );
+
+    if (updated.modifiedCount !== 1) {
+      throw new Error(`Insufficient stock for product ${String(productId)}`);
+    }
+  }
+};
 
 class OrderService {
   async createOrder(orderData: CreateOrderData): Promise<OrderResponse> {
     try {
-      const order: Order = {
-        _id: `order_${orderIdCounter++}`,
+      const order = await OrderModel.create({
         customerId: orderData.customerId,
         items: orderData.items,
         totalAmount: orderData.totalAmount,
@@ -19,16 +51,12 @@ class OrderService {
         paymentStatus: PAYMENT_STATUS.PENDING,
         notes: orderData.notes,
         currency: orderData.currency || DEFAULT_CURRENCY,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      orders.push(order);
+      });
 
       return {
         status: true,
         message: 'Order created successfully',
-        data: { order },
+        data: { order: normalizeOrder(order.toObject()) },
       };
     } catch (error: any) {
       return {
@@ -40,7 +68,7 @@ class OrderService {
 
   async getOrderById(orderId: string): Promise<OrderResponse> {
     try {
-      const order = orders.find(o => o._id === orderId);
+      const order = await OrderModel.findById(orderId).lean();
 
       if (!order) {
         return {
@@ -52,7 +80,7 @@ class OrderService {
       return {
         status: true,
         message: 'Order retrieved successfully',
-        data: { order },
+        data: { order: normalizeOrder(order) },
       };
     } catch (error: any) {
       return {
@@ -65,17 +93,22 @@ class OrderService {
   async getOrdersByCustomerId(customerId: string, page: number = 1, limit: number = 10): Promise<OrderListResponse> {
     try {
       const startIndex = (page - 1) * limit;
-      const endIndex = startIndex + limit;
 
-      const customerOrders = orders.filter(o => o.customerId === customerId);
-      const paginatedOrders = customerOrders.slice(startIndex, endIndex);
+      const [customerOrders, total] = await Promise.all([
+        OrderModel.find({ customerId })
+          .sort({ createdAt: -1 })
+          .skip(startIndex)
+          .limit(limit)
+          .lean(),
+        OrderModel.countDocuments({ customerId }),
+      ]);
 
       return {
         status: true,
         message: 'Orders retrieved successfully',
         data: {
-          orders: paginatedOrders,
-          total: customerOrders.length,
+          orders: customerOrders.map(normalizeOrder),
+          total,
           page,
           limit,
         },
@@ -90,29 +123,27 @@ class OrderService {
 
   async getAllOrders(page: number = 1, limit: number = 10, status?: string, paymentStatus?: string): Promise<OrderListResponse> {
     try {
-      let filteredOrders = [...orders];
-
-      if (status) {
-        filteredOrders = filteredOrders.filter(o => o.status === status);
-      }
-
-      if (paymentStatus) {
-        filteredOrders = filteredOrders.filter(o => o.paymentStatus === paymentStatus);
-      }
-
-      // Sort by creation date (newest first)
-      filteredOrders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      const filter: Record<string, unknown> = {};
+      if (status) filter.status = status;
+      if (paymentStatus) filter.paymentStatus = paymentStatus;
 
       const startIndex = (page - 1) * limit;
-      const endIndex = startIndex + limit;
-      const paginatedOrders = filteredOrders.slice(startIndex, endIndex);
+
+      const [ordersList, total] = await Promise.all([
+        OrderModel.find(filter)
+          .sort({ createdAt: -1 })
+          .skip(startIndex)
+          .limit(limit)
+          .lean(),
+        OrderModel.countDocuments(filter),
+      ]);
 
       return {
         status: true,
         message: 'Orders retrieved successfully',
         data: {
-          orders: paginatedOrders,
-          total: filteredOrders.length,
+          orders: ordersList.map(normalizeOrder),
+          total,
           page,
           limit,
         },
@@ -127,26 +158,23 @@ class OrderService {
 
   async updateOrderStatus(orderId: string, status: string, notes?: string): Promise<OrderResponse> {
     try {
-      const orderIndex = orders.findIndex(o => o._id === orderId);
+      const order = await OrderModel.findById(orderId);
 
-      if (orderIndex === -1) {
+      if (!order) {
         return {
           status: false,
           message: 'Order not found',
         };
       }
 
-      orders[orderIndex].status = status as any;
-      orders[orderIndex].updatedAt = new Date();
-
-      if (notes) {
-        orders[orderIndex].notes = notes;
-      }
+      order.status = status as any;
+      if (notes) order.notes = notes;
+      await order.save();
 
       return {
         status: true,
         message: 'Order status updated successfully',
-        data: { order: orders[orderIndex] },
+        data: { order: normalizeOrder(order.toObject()) },
       };
     } catch (error: any) {
       return {
@@ -158,37 +186,38 @@ class OrderService {
 
   async updatePaymentStatus(orderId: string, paymentStatus: string, paymentIntentId?: string, stripePaymentId?: string): Promise<OrderResponse> {
     try {
-      const orderIndex = orders.findIndex(o => o._id === orderId);
+      const order = await OrderModel.findById(orderId);
 
-      if (orderIndex === -1) {
+      if (!order) {
         return {
           status: false,
           message: 'Order not found',
         };
       }
 
-      orders[orderIndex].paymentStatus = paymentStatus as any;
-      orders[orderIndex].updatedAt = new Date();
+      const previousPaymentStatus = order.paymentStatus;
 
-      if (paymentIntentId) {
-        orders[orderIndex].paymentIntentId = paymentIntentId;
-      }
-
-      if (stripePaymentId) {
-        orders[orderIndex].stripePaymentId = stripePaymentId;
-      }
+      order.paymentStatus = paymentStatus as any;
+      if (paymentIntentId) order.paymentIntentId = paymentIntentId;
+      if (stripePaymentId) order.stripePaymentId = stripePaymentId;
 
       // Auto-update order status based on payment status
-      if (paymentStatus === PAYMENT_STATUS.PAID && orders[orderIndex].status === ORDER_STATUS.PENDING) {
-        orders[orderIndex].status = ORDER_STATUS.CONFIRMED;
+      if (paymentStatus === PAYMENT_STATUS.PAID && order.status === ORDER_STATUS.PENDING) {
+        order.status = ORDER_STATUS.CONFIRMED;
       } else if (paymentStatus === PAYMENT_STATUS.FAILED) {
-        orders[orderIndex].status = ORDER_STATUS.CANCELLED;
+        order.status = ORDER_STATUS.CANCELLED;
       }
+
+      if (previousPaymentStatus !== PAYMENT_STATUS.PAID && paymentStatus === PAYMENT_STATUS.PAID) {
+        await decrementStockForOrderItems(order.items);
+      }
+
+      await order.save();
 
       return {
         status: true,
         message: 'Payment status updated successfully',
-        data: { order: orders[orderIndex] },
+        data: { order: normalizeOrder(order.toObject()) },
       };
     } catch (error: any) {
       return {
@@ -200,16 +229,14 @@ class OrderService {
 
   async cancelOrder(orderId: string, reason?: string): Promise<OrderResponse> {
     try {
-      const orderIndex = orders.findIndex(o => o._id === orderId);
+      const order = await OrderModel.findById(orderId);
 
-      if (orderIndex === -1) {
+      if (!order) {
         return {
           status: false,
           message: 'Order not found',
         };
       }
-
-      const order = orders[orderIndex];
 
       // Can only cancel pending orders
       if (order.status !== ORDER_STATUS.PENDING) {
@@ -219,17 +246,14 @@ class OrderService {
         };
       }
 
-      orders[orderIndex].status = ORDER_STATUS.CANCELLED;
-      orders[orderIndex].updatedAt = new Date();
-
-      if (reason) {
-        orders[orderIndex].notes = reason;
-      }
+      order.status = ORDER_STATUS.CANCELLED;
+      if (reason) order.notes = reason;
+      await order.save();
 
       return {
         status: true,
         message: 'Order cancelled successfully',
-        data: { order: orders[orderIndex] },
+        data: { order: normalizeOrder(order.toObject()) },
       };
     } catch (error: any) {
       return {
@@ -241,8 +265,8 @@ class OrderService {
 
   // Helper method to get order for payment processing
   async getOrderForPayment(orderId: string): Promise<Order | null> {
-    const order = orders.find(o => o._id === orderId);
-    return order || null;
+    const order = await OrderModel.findById(orderId).lean();
+    return order ? normalizeOrder(order) : null;
   }
 }
 

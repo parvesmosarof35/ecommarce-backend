@@ -1,3 +1,5 @@
+import config from "../../config";
+
 //'admin' | 'user' | 'faculty'
 export const USER_ROLE = {
   buyer: "buyer",
@@ -29,7 +31,7 @@ export const superAdminCredentials = {
 
   fastname: "Super",
   lastname: "Admin",
-  email: "parvesmosarof2@gmail.com",
+  email: `${config.SUPER_ADMIN_EMAIL}`,
   password: "$2a$12$NjfyNKCKWgTotxcyGXCcwOwvmf91bHSxgYzGQK83pVDsi51mDA.OO",  // hashed 123456
   phoneNumber:"01722305054",
   isVerify: true,

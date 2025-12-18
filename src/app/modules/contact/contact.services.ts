@@ -4,6 +4,8 @@ import { search_query } from "./contact.constant";
 import { ContactResponse, TContact } from "./contact.interface";
 import contacts from "./contact.model";
 import httpStatus from "http-status";
+import sendEmail from "../../utils/sendEmail";
+import { superAdminCredentials } from "../user/user.constant";
 
 const createContactIntoDb = async (
   payload: TContact
@@ -11,6 +13,23 @@ const createContactIntoDb = async (
   try {
     const contactBuilder = new contacts(payload);
     const result = await contactBuilder.save();
+
+    try {
+      const html = `
+        <div style="font-family: Arial, sans-serif; line-height: 1.5;">
+          <h2 style="margin: 0 0 12px;">New Contact Message</h2>
+          <p style="margin: 0 0 6px;"><strong>Name:</strong> ${payload.name}</p>
+          <p style="margin: 0 0 6px;"><strong>Email:</strong> ${payload.email}</p>
+          <p style="margin: 0 0 6px;"><strong>Question:</strong></p>
+          <p style="margin: 0; white-space: pre-wrap;">${payload.question}</p>
+        </div>
+      `;
+
+      await sendEmail(superAdminCredentials.email, html, "New Contact Message");
+    } catch (error: any) {
+      console.error("Send contact email error:", error);
+    }
+
     return { status: true, message: "successfully recorded" };
   } catch (error: any) {
     console.error("Create contact DB error:", error);
