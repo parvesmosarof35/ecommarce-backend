@@ -10,18 +10,12 @@ import status from "http-status";
  * Handles HTTP POST requests to /product
  */
 const createProduct: RequestHandler = catchAsync(async (req, res) => {
-  // Handle uploaded images from multer
+  // Pass payload directly to service - Cloudinary upload is handled in service layer
   const payload = req.body;
-  
-  // If files are uploaded, add their paths to payload with normalized paths
-  if (req.files && Array.isArray(req.files)) {
-    const imageFiles = req.files as Express.Multer.File[];
-    payload.images_urls = imageFiles.map(file => file.path.replace(/\\/g, '/'));
-  }
-  
+
   // Call service layer to create product in database
   const result = await ProductServices.createProductIntoDb(payload);
-  
+
   // Send standardized success response
   sendResponse(res, {
     statusCode: status.CREATED,
@@ -39,7 +33,7 @@ const createProduct: RequestHandler = catchAsync(async (req, res) => {
 const getAllProducts: RequestHandler = catchAsync(async (req, res) => {
   // Extract query parameters for filtering, search, pagination
   const result = await ProductServices.getAllProductsFromDb(req.query);
-  
+
   // Send response with products and pagination metadata
   sendResponse(res, {
     statusCode: status.OK,
@@ -57,8 +51,11 @@ const getAllProducts: RequestHandler = catchAsync(async (req, res) => {
  */
 const getSingleProduct: RequestHandler = catchAsync(async (req, res) => {
   // Extract product ID from URL parameters and query params for reviews pagination
-  const result = await ProductServices.getSingleProductFromDb(req.params.id, req.query);
-  
+  const result = await ProductServices.getSingleProductFromDb(
+    req.params.id,
+    req.query
+  );
+
   // Send response with single product data
   sendResponse(res, {
     statusCode: status.OK,
@@ -75,8 +72,11 @@ const getSingleProduct: RequestHandler = catchAsync(async (req, res) => {
  */
 const updateProduct: RequestHandler = catchAsync(async (req, res) => {
   // Extract product ID from URL parameters and update data from request body
-  const result = await ProductServices.updateProductIntoDb(req.params.id, req.body);
-  
+  const result = await ProductServices.updateProductIntoDb(
+    req.params.id,
+    req.body
+  );
+
   // Send response with updated product data
   sendResponse(res, {
     statusCode: status.OK,
@@ -94,7 +94,7 @@ const updateProduct: RequestHandler = catchAsync(async (req, res) => {
 const deleteProduct: RequestHandler = catchAsync(async (req, res) => {
   // Extract product ID from URL parameters for deletion
   const result = await ProductServices.deleteProductFromDb(req.params.id);
-  
+
   // Send response confirming deletion
   sendResponse(res, {
     statusCode: status.OK,
@@ -104,7 +104,6 @@ const deleteProduct: RequestHandler = catchAsync(async (req, res) => {
   });
 });
 
-
 /**
  * Controller: Get products that belong to a specific collection
  * Publicly accessible endpoint
@@ -113,10 +112,13 @@ const deleteProduct: RequestHandler = catchAsync(async (req, res) => {
 const getProductsByCollection: RequestHandler = catchAsync(async (req, res) => {
   // Extract collection ID from URL parameters
   const { collectionId } = req.params;
-  
+
   // Call service to filter products by collection
-  const result = await ProductServices.getProductsByCollection(collectionId, req.query);
-  
+  const result = await ProductServices.getProductsByCollection(
+    collectionId,
+    req.query
+  );
+
   // Send response with filtered products and pagination metadata
   sendResponse(res, {
     statusCode: status.OK,
@@ -126,8 +128,6 @@ const getProductsByCollection: RequestHandler = catchAsync(async (req, res) => {
     data: result.result,
   });
 });
-
-
 
 const ProductControllers = {
   createProduct,

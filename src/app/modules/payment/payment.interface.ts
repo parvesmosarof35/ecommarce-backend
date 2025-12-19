@@ -16,6 +16,7 @@ export interface PaymentResponse {
     paymentUrl?: string;
     refundId?: string;
     orderId?: string;
+    status?: string;
   };
 }
 
@@ -30,7 +31,14 @@ export interface OrderPaymentInfo {
   orderId: string;
   amount: number;
   currency: string;
-  status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled' | 'paid' | 'refunded';
+  status:
+    | "pending"
+    | "processing"
+    | "completed"
+    | "failed"
+    | "cancelled"
+    | "paid"
+    | "refunded";
   paymentIntentId?: string;
   stripePaymentId?: string;
   paidAt?: Date;

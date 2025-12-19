@@ -1,74 +1,85 @@
-import { Request, Response } from 'express';
-import { ZodError } from 'zod';
-import PaymentService from './payment.service';
-import PaymentValidationSchemas from './payment.validation';
-import CartPaymentValidationSchemas from './cart-payment.validation';
-import sendResponse from '../../utils/sendResponse';
-import catchAsync from '../../utils/asyncCatch';
-import handelZodError from '../../errors/handelZodError';
+import { Request, Response } from "express";
+import { ZodError } from "zod";
+import PaymentService from "./payment.service";
+import PaymentValidationSchemas from "./payment.validation";
+import CartPaymentValidationSchemas from "./cart-payment.validation";
+import sendResponse from "../../utils/sendResponse";
+import catchAsync from "../../utils/asyncCatch";
+import handelZodError from "../../errors/handelZodError";
 
-class PaymentController {
+class PaymentControllerClass {
   private paymentService: PaymentService;
 
   constructor() {
     this.paymentService = new PaymentService();
   }
 
-  createCartCheckoutSession = catchAsync(async (req: Request, res: Response) => {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        return sendResponse(res, {
-          statusCode: 401,
-          success: false,
-          message: 'User authentication required',
-          data: null,
-        });
-      }
+  createCartCheckoutSession = catchAsync(
+    async (req: Request, res: Response) => {
+      try {
+        const userId = req.user?.id;
+        if (!userId) {
+          return sendResponse(res, {
+            statusCode: 401,
+            success: false,
+            message: "User authentication required",
+            data: null,
+          });
+        }
 
-      const validatedData = CartPaymentValidationSchemas.createCartCheckoutSessionSchema.parse(req);
-      const result = await this.paymentService.createCartCheckoutSession(validatedData.body, userId);
+        const validatedData =
+          CartPaymentValidationSchemas.createCartCheckoutSessionSchema.parse(
+            req
+          );
+        const result = await this.paymentService.createCartCheckoutSession(
+          validatedData.body,
+          userId
+        );
 
-      if (result.status) {
-        sendResponse(res, {
-          statusCode: 200,
-          success: true,
-          message: result.message,
-          data: result.data,
-        });
-      } else {
-        sendResponse(res, {
-          statusCode: 400,
-          success: false,
-          message: result.message,
-          data: null,
-        });
-      }
-    } catch (error) {
-      if (error instanceof ZodError) {
-        const zodError = handelZodError(error);
-        sendResponse(res, {
-          statusCode: zodError.statusCode,
-          success: false,
-          message: zodError.message,
-          errorSources: zodError.errorSources,
-          data: null,
-        });
-      } else {
-        sendResponse(res, {
-          statusCode: 500,
-          success: false,
-          message: 'Internal server error',
-          data: null,
-        });
+        if (result.status) {
+          sendResponse(res, {
+            statusCode: 200,
+            success: true,
+            message: result.message,
+            data: result.data,
+          });
+        } else {
+          sendResponse(res, {
+            statusCode: 400,
+            success: false,
+            message: result.message,
+            data: null,
+          });
+        }
+      } catch (error) {
+        if (error instanceof ZodError) {
+          const zodError = handelZodError(error);
+          sendResponse(res, {
+            statusCode: zodError.statusCode,
+            success: false,
+            message: zodError.message,
+            errorSources: zodError.errorSources,
+            data: null,
+          });
+        } else {
+          sendResponse(res, {
+            statusCode: 500,
+            success: false,
+            message: "Internal server error",
+            data: null,
+          });
+        }
       }
     }
-  });
+  );
 
   confirmPayment = catchAsync(async (req: Request, res: Response) => {
     try {
-      const validatedData = PaymentValidationSchemas.confirmPaymentSchema.parse(req);
-      const result = await this.paymentService.confirmPayment(validatedData.body.paymentIntentId);
+      const validatedData =
+        PaymentValidationSchemas.confirmPaymentSchema.parse(req);
+      const result = await this.paymentService.confirmPayment(
+        validatedData.body.paymentIntentId
+      );
 
       if (result.status) {
         sendResponse(res, {
@@ -99,7 +110,7 @@ class PaymentController {
         sendResponse(res, {
           statusCode: 500,
           success: false,
-          message: 'Internal server error',
+          message: "Internal server error",
           data: null,
         });
       }
@@ -108,7 +119,8 @@ class PaymentController {
 
   refundPayment = catchAsync(async (req: Request, res: Response) => {
     try {
-      const validatedData = PaymentValidationSchemas.refundPaymentSchema.parse(req);
+      const validatedData =
+        PaymentValidationSchemas.refundPaymentSchema.parse(req);
       const result = await this.paymentService.refundPayment(
         validatedData.body.paymentIntentId,
         validatedData.body.amount
@@ -143,7 +155,62 @@ class PaymentController {
         sendResponse(res, {
           statusCode: 500,
           success: false,
-          message: 'Internal server error',
+          message: "Internal server error",
+          data: null,
+        });
+      }
+    }
+  });
+
+  createDirectPayment = catchAsync(async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return sendResponse(res, {
+          statusCode: 401,
+          success: false,
+          message: "User authentication required",
+          data: null,
+        });
+      }
+
+      const validatedData =
+        CartPaymentValidationSchemas.createDirectPaymentSchema.parse(req);
+      const result = await this.paymentService.createDirectPayment(
+        validatedData.body,
+        userId
+      );
+
+      if (result.status) {
+        sendResponse(res, {
+          statusCode: 200,
+          success: true,
+          message: result.message,
+          data: result.data,
+        });
+      } else {
+        sendResponse(res, {
+          statusCode: 400,
+          success: false,
+          message: result.message,
+          data: null,
+        });
+      }
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const zodError = handelZodError(error);
+        sendResponse(res, {
+          statusCode: zodError.statusCode,
+          success: false,
+          message: zodError.message,
+          errorSources: zodError.errorSources,
+          data: null,
+        });
+      } else {
+        sendResponse(res, {
+          statusCode: 500,
+          success: false,
+          message: "Internal server error",
           data: null,
         });
       }
@@ -151,11 +218,14 @@ class PaymentController {
   });
 
   webhookHandler = catchAsync(async (req: Request, res: Response) => {
-    const signature = req.headers['stripe-signature'] as string;
+    const signature = req.headers["stripe-signature"] as string;
     const payload = req.rawBody ?? req.body;
 
     try {
-      const event = await this.paymentService.constructWebhookEvent(payload, signature);
+      const event = await this.paymentService.constructWebhookEvent(
+        payload,
+        signature
+      );
       const result = await this.paymentService.processWebhookEvent(event);
 
       if (result.status) {
@@ -184,4 +254,15 @@ class PaymentController {
   });
 }
 
-export default new PaymentController();
+const PaymentControllerInstance = new PaymentControllerClass();
+
+const PaymentController = {
+  createCartCheckoutSession:
+    PaymentControllerInstance.createCartCheckoutSession,
+  confirmPayment: PaymentControllerInstance.confirmPayment,
+  refundPayment: PaymentControllerInstance.refundPayment,
+  createDirectPayment: PaymentControllerInstance.createDirectPayment,
+  webhookHandler: PaymentControllerInstance.webhookHandler,
+};
+
+export default PaymentController;

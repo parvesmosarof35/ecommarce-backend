@@ -6,6 +6,7 @@ export interface ICollection extends Document {
   name: string;
   slug: string;
   image_url?: string;
+  imagePublicId?: string;
   products?: string[];
   isDelete?: boolean;
 }

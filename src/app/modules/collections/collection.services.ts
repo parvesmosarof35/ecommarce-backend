@@ -1,6 +1,11 @@
 import collection from "./collection.model";
 import { ICollection, RequestWithFile } from "./collection.interface";
 import QueryBuilder from "../../builder/QueryBuilder";
+import {
+  uploadImageToCloudinary,
+  deleteFromCloudinary,
+} from "../../utils/cloudinary";
+import fs from "fs";
 
 /**
  * Creates a new collection in the database with file upload
@@ -10,10 +15,20 @@ import QueryBuilder from "../../builder/QueryBuilder";
 const createCollectionIntoDb = async (req: RequestWithFile) => {
   try {
     const data = req.body as any;
-    const file = req.file?.path.replace(/\\/g, "/");
+    const filePath = req.file?.path?.replace(/\\/g, "/");
 
-    if (file) {
-      data.image_url = file;
+    if (filePath) {
+      const uploaded = await uploadImageToCloudinary(
+        filePath,
+        "collections",
+        "medium"
+      );
+      data.image_url = uploaded.secure_url;
+      data.imagePublicId = uploaded.public_id;
+
+      try {
+        fs.unlinkSync(req.file?.path as string);
+      } catch {}
     }
 
     const result = await collection.create(data);
@@ -72,20 +87,42 @@ const getSingleCollectionFromDb = async (id: string) => {
 const updateCollectionIntoDb = async (req: RequestWithFile, id: string) => {
   try {
     const data = req.body as any;
-    const file = req.file?.path.replace(/\\/g, "/");
+    const filePath = req.file?.path?.replace(/\\/g, "/");
 
-    if (file) {
-      data.image_url = file;
+    if (filePath) {
+      const existingCollection = await collection
+        .findById(id)
+        .select("imagePublicId");
+      const uploaded = await uploadImageToCloudinary(
+        filePath,
+        "collections",
+        "medium"
+      );
+
+      data.image_url = uploaded.secure_url;
+      data.imagePublicId = uploaded.public_id;
+
+      try {
+        fs.unlinkSync(req.file?.path as string);
+      } catch {}
+
+      try {
+        if (existingCollection?.imagePublicId) {
+          await deleteFromCloudinary(existingCollection.imagePublicId);
+        }
+      } catch {}
     }
 
     // Find and update collection with:
     // - new: true returns the updated document
     // - runValidators: true ensures schema validation on update
     // - populate products to show updated product details
-    const result = await collection.findByIdAndUpdate(id, data, {
-      new: true,
-      runValidators: true,
-    }).populate("products");
+    const result = await collection
+      .findByIdAndUpdate(id, data, {
+        new: true,
+        runValidators: true,
+      })
+      .populate("products");
     return result;
   } catch (error: any) {
     throw new Error(error.message || "Failed to update collection");
@@ -109,14 +146,19 @@ const deleteCollectionFromDb = async (id: string) => {
  * @param productIds - Array of product IDs to add
  * @returns Promise<ICollection | null> - Updated collection with populated products
  */
-const addProductsToCollection = async (collectionId: string, productIds: string[]) => {
+const addProductsToCollection = async (
+  collectionId: string,
+  productIds: string[]
+) => {
   // $addToSet with $each adds multiple products without duplicates
   // This prevents the same product from being added multiple times
-  const result = await collection.findByIdAndUpdate(
-    collectionId,
-    { $addToSet: { products: { $each: productIds } } },
-    { new: true, runValidators: true }
-  ).populate("products");
+  const result = await collection
+    .findByIdAndUpdate(
+      collectionId,
+      { $addToSet: { products: { $each: productIds } } },
+      { new: true, runValidators: true }
+    )
+    .populate("products");
   return result;
 };
 
@@ -126,13 +168,18 @@ const addProductsToCollection = async (collectionId: string, productIds: string[
  * @param productIds - Array of product IDs to remove
  * @returns Promise<ICollection | null> - Updated collection with populated products
  */
-const removeProductsFromCollection = async (collectionId: string, productIds: string[]) => {
+const removeProductsFromCollection = async (
+  collectionId: string,
+  productIds: string[]
+) => {
   // $pullAll removes all specified product IDs from the products array
-  const result = await collection.findByIdAndUpdate(
-    collectionId,
-    { $pullAll: { products: productIds } },
-    { new: true }
-  ).populate("products");
+  const result = await collection
+    .findByIdAndUpdate(
+      collectionId,
+      { $pullAll: { products: productIds } },
+      { new: true }
+    )
+    .populate("products");
   return result;
 };
 

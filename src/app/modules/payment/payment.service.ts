@@ -1,15 +1,22 @@
-import Stripe from 'stripe';
-import config from '../../config';
-import { PaymentResponse, WebhookEvent } from './payment.interface';
-import { PAYMENT_STATUS, WEBHOOK_EVENTS } from './payment.constant';
-import OrderService from '../order/order.service';
-import CartServices from '../cart/cart.services';
-import { CartPaymentRequest, CartPaymentResponse, CartPaymentMetadata } from './cart-payment.interface';
-import { CartDocument } from '../cart/cart.interface';
+import Stripe from "stripe";
+import config from "../../config";
+import { PaymentResponse, WebhookEvent } from "./payment.interface";
+import { PAYMENT_STATUS, WEBHOOK_EVENTS } from "./payment.constant";
+import OrderService from "../order/order.service";
+import CartServices from "../cart/cart.services";
+import {
+  CartPaymentRequest,
+  CartPaymentResponse,
+  CartPaymentMetadata,
+} from "./cart-payment.interface";
+import { CartDocument } from "../cart/cart.interface";
 
-const stripe = new Stripe(config.stripe_payment_gateway.stripe_secret_key || '', {
-  apiVersion: '2025-08-27.basil',
-});
+const stripe = new Stripe(
+  config.stripe_payment_gateway.stripe_secret_key || "",
+  {
+    apiVersion: "2025-08-27.basil",
+  }
+);
 
 class PaymentService {
   private orderService: OrderService;
@@ -18,44 +25,52 @@ class PaymentService {
     this.orderService = new OrderService();
   }
 
-  async createCartCheckoutSession(paymentRequest: CartPaymentRequest, userId: string): Promise<CartPaymentResponse> {
+  async createCartCheckoutSession(
+    paymentRequest: CartPaymentRequest,
+    userId: string
+  ): Promise<CartPaymentResponse> {
     try {
       // Get user's cart items from database
       const cartResult = await CartServices.getCartByUser(userId, {});
-      
+
       if (!cartResult.result || cartResult.result.length === 0) {
         return {
           status: false,
-          message: 'Your cart is empty. Please add items to your cart before proceeding.',
+          message:
+            "Your cart is empty. Please add items to your cart before proceeding.",
         };
       }
 
       // Calculate total amount
       const totalAmount = cartResult.summary.subtotal;
-      
+
       if (totalAmount <= 0) {
         return {
           status: false,
-          message: 'Invalid cart total. Please check your cart items.',
+          message: "Invalid cart total. Please check your cart items.",
         };
       }
 
       // Transform cart items to payment items with better error handling
-      const cartItems = cartResult.result.map((item: CartDocument & { product_id: any }) => {
-        if (!item.product_id) {
-          throw new Error(`Product not found for cart item: ${item._id}`);
+      const cartItems = cartResult.result.map(
+        (item: CartDocument & { product_id: any }) => {
+          if (!item.product_id) {
+            throw new Error(`Product not found for cart item: ${item._id}`);
+          }
+          if (!item.product_id._id) {
+            throw new Error(
+              `Product ID is missing for product: ${item.product_id}`
+            );
+          }
+          return {
+            productId: item.product_id._id,
+            quantity: item.quantity,
+            price: item.price_at_addition,
+            name: item.product_id.name || `Product ${item.product_id._id}`,
+            image: item.product_id.image,
+          };
         }
-        if (!item.product_id._id) {
-          throw new Error(`Product ID is missing for product: ${item.product_id}`);
-        }
-        return {
-          productId: item.product_id._id,
-          quantity: item.quantity,
-          price: item.price_at_addition,
-          name: item.product_id.name || `Product ${item.product_id._id}`,
-          image: item.product_id.image,
-        };
-      });
+      );
 
       // Create metadata for order creation after payment
       const metadata: CartPaymentMetadata = {
@@ -64,15 +79,15 @@ class PaymentService {
         totalAmount,
         shippingAddress: paymentRequest.shippingAddress,
         billingAddress: paymentRequest.billingAddress,
-        currency: paymentRequest.currency || 'usd',
+        currency: paymentRequest.currency || "usd",
         notes: paymentRequest.notes,
       };
 
       const session = await stripe.checkout.sessions.create({
-        payment_method_types: ['card'],
-        line_items: cartItems.map(item => ({
+        payment_method_types: ["card"],
+        line_items: cartItems.map((item) => ({
           price_data: {
-            currency: paymentRequest.currency || 'usd',
+            currency: paymentRequest.currency || "usd",
             product_data: {
               name: item.name || `Product ${item.productId}`,
               description: `Product ID: ${item.productId}`,
@@ -81,11 +96,11 @@ class PaymentService {
           },
           quantity: item.quantity,
         })),
-        mode: 'payment',
+        mode: "payment",
         success_url: config.stripe_payment_gateway.checkout_success_url,
         cancel_url: config.stripe_payment_gateway.checkout_cancel_url,
         metadata: {
-          type: 'cart_payment',
+          type: "cart_payment",
           customerId: userId,
           cartData: JSON.stringify(metadata),
         },
@@ -94,7 +109,7 @@ class PaymentService {
 
       return {
         status: true,
-        message: 'Cart checkout session created successfully',
+        message: "Cart checkout session created successfully",
         data: {
           sessionId: session.id,
           paymentUrl: session.url || undefined,
@@ -103,19 +118,20 @@ class PaymentService {
     } catch (error: any) {
       return {
         status: false,
-        message: error.message || 'Failed to create cart checkout session',
+        message: error.message || "Failed to create cart checkout session",
       };
     }
   }
 
   async confirmPayment(paymentIntentId: string): Promise<PaymentResponse> {
     try {
-      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+      const paymentIntent =
+        await stripe.paymentIntents.retrieve(paymentIntentId);
 
-      if (paymentIntent.status === 'succeeded') {
+      if (paymentIntent.status === "succeeded") {
         return {
           status: true,
-          message: 'Payment confirmed successfully',
+          message: "Payment confirmed successfully",
           data: {
             paymentIntentId: paymentIntent.id,
           },
@@ -129,12 +145,15 @@ class PaymentService {
     } catch (error: any) {
       return {
         status: false,
-        message: error.message || 'Failed to confirm payment',
+        message: error.message || "Failed to confirm payment",
       };
     }
   }
 
-  async refundPayment(paymentIntentId: string, amount?: number): Promise<PaymentResponse> {
+  async refundPayment(
+    paymentIntentId: string,
+    amount?: number
+  ): Promise<PaymentResponse> {
     try {
       const refundParams: any = {
         payment_intent: paymentIntentId,
@@ -148,7 +167,7 @@ class PaymentService {
 
       return {
         status: true,
-        message: 'Refund processed successfully',
+        message: "Refund processed successfully",
         data: {
           refundId: refund.id,
           paymentIntentId: paymentIntentId,
@@ -157,7 +176,7 @@ class PaymentService {
     } catch (error: any) {
       return {
         status: false,
-        message: error.message || 'Failed to process refund',
+        message: error.message || "Failed to process refund",
       };
     }
   }
@@ -168,11 +187,63 @@ class PaymentService {
         case WEBHOOK_EVENTS.PAYMENT_INTENT_SUCCEEDED:
           const paymentIntent = event.data.object;
           const orderId = paymentIntent.metadata?.orderId || undefined;
-          
-          // Handle cart-based payments - create order automatically
-          if (paymentIntent.metadata?.type === 'cart_payment') {
+
+          // Handle direct payments
+          if (paymentIntent.metadata?.type === "direct_payment") {
             try {
-              const cartData: CartPaymentMetadata = JSON.parse(paymentIntent.metadata.cartData);
+              const paymentData = JSON.parse(
+                paymentIntent.metadata.items || "[]"
+              );
+              const orderResult = await this.orderService.createOrder({
+                customerId: paymentIntent.metadata.customerId,
+                items: paymentData,
+                totalAmount: parseFloat(paymentIntent.metadata.totalAmount),
+                shippingAddress: JSON.parse(
+                  paymentIntent.metadata.shippingAddress
+                ),
+                billingAddress: JSON.parse(
+                  paymentIntent.metadata.billingAddress
+                ),
+                notes: paymentIntent.metadata.notes,
+                currency: paymentIntent.metadata.currency,
+              });
+
+              if (orderResult.status && orderResult.data?.order) {
+                // Update order with payment info
+                await this.orderService.updatePaymentStatus(
+                  orderResult.data.order._id,
+                  PAYMENT_STATUS.PAID,
+                  paymentIntent.id,
+                  paymentIntent.id
+                );
+
+                return {
+                  status: true,
+                  message:
+                    "Direct payment succeeded and order created automatically",
+                  data: {
+                    paymentIntentId: paymentIntent.id,
+                    orderId: orderResult.data.order._id,
+                  },
+                };
+              }
+            } catch (error: any) {
+              return {
+                status: false,
+                message: `Failed to create order from direct payment: ${error.message}`,
+                data: {
+                  paymentIntentId: paymentIntent.id,
+                },
+              };
+            }
+          }
+
+          // Handle cart-based payments - create order automatically
+          if (paymentIntent.metadata?.type === "cart_payment") {
+            try {
+              const cartData: CartPaymentMetadata = JSON.parse(
+                paymentIntent.metadata.cartData
+              );
               const orderResult = await this.orderService.createOrder({
                 customerId: cartData.customerId,
                 items: cartData.items,
@@ -194,13 +265,12 @@ class PaymentService {
 
                 try {
                   await CartServices.clearUserCart(cartData.customerId);
-                } catch {
-                  
-                }
+                } catch {}
 
                 return {
                   status: true,
-                  message: 'Cart payment succeeded and order created automatically',
+                  message:
+                    "Cart payment succeeded and order created automatically",
                   data: {
                     paymentIntentId: paymentIntent.id,
                     orderId: orderResult.data.order._id,
@@ -217,7 +287,7 @@ class PaymentService {
               };
             }
           }
-          
+
           // Handle regular order payments
           if (orderId) {
             await this.orderService.updatePaymentStatus(
@@ -230,7 +300,7 @@ class PaymentService {
 
           return {
             status: true,
-            message: 'Payment succeeded and order updated',
+            message: "Payment succeeded and order updated",
             data: {
               paymentIntentId: paymentIntent.id,
               orderId,
@@ -239,8 +309,9 @@ class PaymentService {
 
         case WEBHOOK_EVENTS.PAYMENT_INTENT_FAILED:
           const failedPaymentIntent = event.data.object;
-          const failedOrderId = failedPaymentIntent.metadata?.orderId || undefined;
-          
+          const failedOrderId =
+            failedPaymentIntent.metadata?.orderId || undefined;
+
           if (failedOrderId) {
             await this.orderService.updatePaymentStatus(
               failedOrderId,
@@ -252,7 +323,7 @@ class PaymentService {
 
           return {
             status: false,
-            message: 'Payment failed and order updated',
+            message: "Payment failed and order updated",
             data: {
               paymentIntentId: failedPaymentIntent.id,
               orderId: failedOrderId,
@@ -261,8 +332,9 @@ class PaymentService {
 
         case WEBHOOK_EVENTS.PAYMENT_INTENT_CANCELED:
           const canceledPaymentIntent = event.data.object;
-          const canceledOrderId = canceledPaymentIntent.metadata?.orderId || undefined;
-          
+          const canceledOrderId =
+            canceledPaymentIntent.metadata?.orderId || undefined;
+
           if (canceledOrderId) {
             await this.orderService.updatePaymentStatus(
               canceledOrderId,
@@ -274,7 +346,7 @@ class PaymentService {
 
           return {
             status: false,
-            message: 'Payment canceled and order updated',
+            message: "Payment canceled and order updated",
             data: {
               paymentIntentId: canceledPaymentIntent.id,
               orderId: canceledOrderId,
@@ -284,11 +356,13 @@ class PaymentService {
         case WEBHOOK_EVENTS.CHECKOUT_SESSION_COMPLETED:
           const session = event.data.object;
           const sessionOrderId = session.metadata?.orderId || undefined;
-          
+
           // Handle cart-based checkout sessions - create order automatically
-          if (session.metadata?.type === 'cart_payment') {
+          if (session.metadata?.type === "cart_payment") {
             try {
-              const cartData: CartPaymentMetadata = JSON.parse(session.metadata.cartData);
+              const cartData: CartPaymentMetadata = JSON.parse(
+                session.metadata.cartData
+              );
               const orderResult = await this.orderService.createOrder({
                 customerId: cartData.customerId,
                 items: cartData.items,
@@ -310,13 +384,12 @@ class PaymentService {
 
                 try {
                   await CartServices.clearUserCart(cartData.customerId);
-                } catch {
-                  
-                }
+                } catch {}
 
                 return {
                   status: true,
-                  message: 'Cart checkout completed and order created automatically',
+                  message:
+                    "Cart checkout completed and order created automatically",
                   data: {
                     paymentIntentId: session.payment_intent as string,
                     orderId: orderResult.data.order._id,
@@ -333,7 +406,7 @@ class PaymentService {
               };
             }
           }
-          
+
           // Handle regular checkout sessions
           if (sessionOrderId && session.payment_intent) {
             await this.orderService.updatePaymentStatus(
@@ -346,7 +419,7 @@ class PaymentService {
 
           return {
             status: true,
-            message: 'Checkout session completed and order updated',
+            message: "Checkout session completed and order updated",
             data: {
               sessionId: session.id,
               paymentIntentId: session.payment_intent,
@@ -363,16 +436,164 @@ class PaymentService {
     } catch (error: any) {
       return {
         status: false,
-        message: error.message || 'Failed to process webhook event',
+        message: error.message || "Failed to process webhook event",
       };
     }
   }
 
-  async constructWebhookEvent(payload: string | Buffer, signature: string): Promise<WebhookEvent> {
+  async createDirectPayment(
+    paymentRequest: any,
+    userId: string
+  ): Promise<PaymentResponse> {
+    try {
+      // Get user's cart items from database (same as cart checkout)
+      const cartResult = await CartServices.getCartByUser(userId, {});
+
+      if (!cartResult.result || cartResult.result.length === 0) {
+        return {
+          status: false,
+          message:
+            "Your cart is empty. Please add items to your cart before proceeding.",
+        };
+      }
+
+      // Calculate total amount from cart
+      const totalAmount = cartResult.summary.subtotal;
+
+      if (totalAmount <= 0) {
+        return {
+          status: false,
+          message: "Invalid cart total. Please check your cart items.",
+        };
+      }
+
+      // Transform cart items to payment items (same as cart checkout)
+      const cartItems = cartResult.result.map(
+        (item: CartDocument & { product_id: any }) => {
+          if (!item.product_id) {
+            throw new Error(`Product not found for cart item: ${item._id}`);
+          }
+          if (!item.product_id._id) {
+            throw new Error(
+              `Product ID is missing for product: ${item.product_id}`
+            );
+          }
+          return {
+            productId: item.product_id._id,
+            quantity: item.quantity,
+            price: item.price_at_addition,
+            name: item.product_id.name || `Product ${item.product_id._id}`,
+            image: item.product_id.image,
+          };
+        }
+      );
+
+      // Create metadata for order creation
+      const metadata: any = {
+        type: "direct_payment",
+        customerId: userId,
+        items: JSON.stringify(cartItems),
+        totalAmount,
+        shippingAddress: paymentRequest.shippingAddress,
+        billingAddress: paymentRequest.billingAddress,
+        currency: paymentRequest.currency || "usd",
+        notes: paymentRequest.notes,
+      };
+
+      // Create payment intent directly (no checkout session)
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(totalAmount * 100), // Convert to cents
+        currency: paymentRequest.currency || "usd",
+        payment_method: paymentRequest.paymentMethodId,
+        confirmation_method: "manual",
+        confirm: true, // Confirm immediately
+        metadata: metadata,
+        shipping: {
+          name: `${paymentRequest.shippingAddress.street} ${paymentRequest.shippingAddress.city}`,
+          address: {
+            line1: paymentRequest.shippingAddress.street,
+            city: paymentRequest.shippingAddress.city,
+            state: paymentRequest.shippingAddress.state,
+            postal_code: paymentRequest.shippingAddress.postalCode,
+            country: paymentRequest.shippingAddress.country,
+          },
+        },
+      });
+
+      // If payment succeeds, create order immediately
+      if (paymentIntent.status === "succeeded") {
+        try {
+          const orderResult = await this.orderService.createOrder({
+            customerId: userId,
+            items: cartItems,
+            totalAmount,
+            shippingAddress: paymentRequest.shippingAddress,
+            billingAddress: paymentRequest.billingAddress,
+            notes: paymentRequest.notes,
+            currency: paymentRequest.currency || "usd",
+          });
+
+          if (orderResult.status && orderResult.data?.order) {
+            // Update order with payment info
+            await this.orderService.updatePaymentStatus(
+              orderResult.data.order._id,
+              PAYMENT_STATUS.PAID,
+              paymentIntent.id,
+              paymentIntent.id
+            );
+
+            // Clear cart after successful payment
+            try {
+              await CartServices.clearUserCart(userId);
+            } catch {}
+
+            return {
+              status: true,
+              message: "Direct payment successful and order created",
+              data: {
+                paymentIntentId: paymentIntent.id,
+                orderId: orderResult.data.order._id,
+              },
+            };
+          }
+        } catch (error: any) {
+          return {
+            status: false,
+            message: `Payment succeeded but failed to create order: ${error.message}`,
+            data: {
+              paymentIntentId: paymentIntent.id,
+            },
+          };
+        }
+      }
+
+      return {
+        status: true,
+        message: "Direct payment initiated successfully",
+        data: {
+          paymentIntentId: paymentIntent.id,
+          ...(paymentIntent.client_secret && {
+            clientSecret: paymentIntent.client_secret,
+          }),
+          status: paymentIntent.status as string,
+        },
+      };
+    } catch (error: any) {
+      return {
+        status: false,
+        message: error.message || "Failed to process direct payment",
+      };
+    }
+  }
+
+  async constructWebhookEvent(
+    payload: string | Buffer,
+    signature: string | undefined
+  ): Promise<WebhookEvent> {
     return stripe.webhooks.constructEvent(
       payload,
-      signature,
-      config.stripe_payment_gateway.stripe_webhook_secret || ''
+      signature || "",
+      config.stripe_payment_gateway.stripe_webhook_secret || ""
     );
   }
 }

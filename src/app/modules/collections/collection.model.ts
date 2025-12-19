@@ -21,10 +21,16 @@ const CollectionSchema = new Schema<ICollection, CollectionModel>(
       type: String,
       required: false,
     },
-    products: [{
-      type: Schema.Types.ObjectId,
-      ref: "products",
-    }],
+    imagePublicId: {
+      type: String,
+      required: false,
+    },
+    products: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "products",
+      },
+    ],
     isDelete: {
       type: Boolean,
       default: false,
@@ -58,6 +64,9 @@ CollectionSchema.statics.isCollectionCustomId = async function (id: string) {
   return collection;
 };
 
-const collection = model<ICollection, CollectionModel>("collections", CollectionSchema);
+const collection = model<ICollection, CollectionModel>(
+  "collections",
+  CollectionSchema
+);
 
 export default collection;

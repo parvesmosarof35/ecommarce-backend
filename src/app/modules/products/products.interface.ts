@@ -1,7 +1,7 @@
 import { Document, Model, Schema } from "mongoose";
 
 // Predefined ingredient options for future queries (case-sensitive)
-export type KeyIngredient = 
+export type KeyIngredient =
   | "Hyaluronic Acid"
   | "Vitamin C"
   | "Retinol"
@@ -9,15 +9,10 @@ export type KeyIngredient =
   | "Peptides";
 
 // Predefined skin type options for future queries (case-sensitive)
-export type SkinType = 
-  | "Dry"
-  | "Oily"
-  | "Combination"
-  | "Sensitive"
-  | "Normal";
+export type SkinType = "Dry" | "Oily" | "Combination" | "Sensitive" | "Normal";
 
 // Sorting options for products
-export type SortOption = 
+export type SortOption =
   | "bestSelling"
   | "bestRating"
   | "priceLowToHigh"
@@ -34,6 +29,7 @@ export interface IProduct extends Document {
   sku: string; // Stock Keeping Unit
   isFeatured?: boolean; // Featured product flag
   images_urls: string[];
+  imagesPublicIds?: string[];
   categories?: string[];
   skintype?: SkinType; // Single skin type from predefined options (case-sensitive)
   ingredients?: KeyIngredient[]; // Array of key ingredients from predefined options (case-sensitive)

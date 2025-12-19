@@ -2,15 +2,51 @@ import product from "./products.model";
 import { IProduct } from "./products.interface";
 import QueryBuilder from "../../builder/QueryBuilder";
 import ReviewServices from "../reviews/reviews.services";
+import {
+  uploadImageToCloudinary,
+  deleteFromCloudinary,
+} from "../../utils/cloudinary";
+import fs from "fs";
 
 /**
  * Creates a new product in the database
  * @param payload - Product data including name, description, price, stock, images, and optional collections
  * @returns Promise<IProduct> - The created product document
  */
-const createProductIntoDb = async (payload: IProduct) => {
-  const result = await product.create(payload);
-  return result;
+const createProductIntoDb = async (payload: any) => {
+  try {
+    const { imageFiles, ...productData } = payload;
+
+    // Handle multiple image uploads to Cloudinary
+    if (imageFiles && Array.isArray(imageFiles) && imageFiles.length > 0) {
+      const uploadPromises = imageFiles.map(
+        async (file: Express.Multer.File) => {
+          const filePath = file.path.replace(/\\/g, "/");
+          const uploaded = await uploadImageToCloudinary(
+            filePath,
+            "products",
+            "medium"
+          );
+
+          // Delete temporary file after upload
+          try {
+            fs.unlinkSync(file.path);
+          } catch {}
+
+          return uploaded;
+        }
+      );
+
+      const uploadedImages = await Promise.all(uploadPromises);
+      productData.images_urls = uploadedImages.map((img) => img.secure_url);
+      productData.imagesPublicIds = uploadedImages.map((img) => img.public_id);
+    }
+
+    const result = await product.create(productData);
+    return result;
+  } catch (error: any) {
+    throw new Error(error.message || "Failed to create product");
+  }
 };
 
 /**
@@ -25,24 +61,24 @@ const getAllProductsFromDb = async (query: any) => {
 
   if (query.sort) {
     switch (query.sort) {
-      case 'bestSelling':
+      case "bestSelling":
         // Sort by stock_quantity (assuming higher stock means more sales)
-        modifiedQuery.sort = 'stock_quantity';
+        modifiedQuery.sort = "stock_quantity";
         break;
-      case 'bestRating':
+      case "bestRating":
         // Use aggregation pipeline for real rating sort
         return getProductsSortedByRating(query);
-      case 'priceLowToHigh':
-        modifiedQuery.sort = 'price';
+      case "priceLowToHigh":
+        modifiedQuery.sort = "price";
         break;
-      case 'priceHighToLow':
-        modifiedQuery.sort = '-price';
+      case "priceHighToLow":
+        modifiedQuery.sort = "-price";
         break;
-      case 'newest':
-        modifiedQuery.sort = '-createdAt';
+      case "newest":
+        modifiedQuery.sort = "-createdAt";
         break;
-      case 'oldest':
-        modifiedQuery.sort = 'createdAt';
+      case "oldest":
+        modifiedQuery.sort = "createdAt";
         break;
       default:
         // Use the original sort parameter
@@ -71,7 +107,9 @@ const getAllProductsFromDb = async (query: any) => {
   // Add rating data to each product
   const productsWithRatings = await Promise.all(
     result.map(async (product: any) => {
-      const ratingData = await ReviewServices.getAverageRatingForProduct(product._id.toString());
+      const ratingData = await ReviewServices.getAverageRatingForProduct(
+        product._id.toString()
+      );
       return {
         ...product.toObject(),
         averageRating: ratingData.averageRating,
@@ -95,36 +133,33 @@ const getProductsSortedByRating = async (query: any) => {
     // Add rating data from reviews collection
     {
       $lookup: {
-        from: 'reviews',
-        localField: '_id',
-        foreignField: 'product',
-        as: 'reviews'
-      }
+        from: "reviews",
+        localField: "_id",
+        foreignField: "product",
+        as: "reviews",
+      },
     },
     // Calculate average rating and total reviews
     {
       $addFields: {
         averageRating: {
           $cond: {
-            if: { $gt: [{ $size: '$reviews' }, 0] },
+            if: { $gt: [{ $size: "$reviews" }, 0] },
             then: {
-              $divide: [
-                { $sum: '$reviews.rating' },
-                { $size: '$reviews' }
-              ]
+              $divide: [{ $sum: "$reviews.rating" }, { $size: "$reviews" }],
             },
-            else: 0
-          }
+            else: 0,
+          },
         },
-        totalReviews: { $size: '$reviews' }
-      }
+        totalReviews: { $size: "$reviews" },
+      },
     },
     // Remove the reviews array to clean up the output
     {
       $project: {
-        reviews: 0
-      }
-    }
+        reviews: 0,
+      },
+    },
   ];
 
   // Add search stage if searchTerm exists
@@ -132,53 +167,57 @@ const getProductsSortedByRating = async (query: any) => {
     pipeline.unshift({
       $match: {
         $or: [
-          { name: { $regex: query.searchTerm, $options: 'i' } },
-          { description: { $regex: query.searchTerm, $options: 'i' } }
-        ]
-      }
+          { name: { $regex: query.searchTerm, $options: "i" } },
+          { description: { $regex: query.searchTerm, $options: "i" } },
+        ],
+      },
     });
   }
 
   // Add filter stages for other query parameters
   if (query.categories) {
-    const categories = Array.isArray(query.categories) ? query.categories : [query.categories];
+    const categories = Array.isArray(query.categories)
+      ? query.categories
+      : [query.categories];
     pipeline.push({
-      $match: { categories: { $in: categories } }
+      $match: { categories: { $in: categories } },
     });
   }
 
   if (query.skintype) {
     pipeline.push({
-      $match: { skintype: query.skintype }
+      $match: { skintype: query.skintype },
     });
   }
 
   if (query.ingredients) {
-    const ingredients = Array.isArray(query.ingredients) ? query.ingredients : [query.ingredients];
+    const ingredients = Array.isArray(query.ingredients)
+      ? query.ingredients
+      : [query.ingredients];
     pipeline.push({
-      $match: { ingredients: { $in: ingredients } }
+      $match: { ingredients: { $in: ingredients } },
     });
   }
 
   if (query.isFeatured) {
     pipeline.push({
-      $match: { isFeatured: query.isFeatured === 'true' }
+      $match: { isFeatured: query.isFeatured === "true" },
     });
   }
 
   // Add collections lookup
   pipeline.push({
     $lookup: {
-      from: 'collections',
-      localField: 'collections',
-      foreignField: '_id',
-      as: 'collections'
-    }
+      from: "collections",
+      localField: "collections",
+      foreignField: "_id",
+      as: "collections",
+    },
   });
 
   // Sort by rating (descending)
   pipeline.push({
-    $sort: { averageRating: -1, totalReviews: -1 }
+    $sort: { averageRating: -1, totalReviews: -1 },
   });
 
   // Add pagination
@@ -186,10 +225,7 @@ const getProductsSortedByRating = async (query: any) => {
   const limit = parseInt(query.limit) || 10;
   const skip = (page - 1) * limit;
 
-  pipeline.push(
-    { $skip: skip },
-    { $limit: limit }
-  );
+  pipeline.push({ $skip: skip }, { $limit: limit });
 
   // Execute aggregation
   const result = await product.aggregate(pipeline);
@@ -199,14 +235,14 @@ const getProductsSortedByRating = async (query: any) => {
   // Remove pagination stages for count
   countPipeline.splice(-2, 2);
   // Remove sort stage for count
-  const sortIndex = countPipeline.findIndex(stage => stage.$sort);
+  const sortIndex = countPipeline.findIndex((stage) => stage.$sort);
   if (sortIndex !== -1) {
     countPipeline.splice(sortIndex, 1);
   }
 
   const countResult = await product.aggregate([
     ...countPipeline,
-    { $count: 'total' }
+    { $count: "total" },
   ]);
 
   const total = countResult.length > 0 ? countResult[0].total : 0;
@@ -217,8 +253,8 @@ const getProductsSortedByRating = async (query: any) => {
       page,
       limit,
       total,
-      totalPage: Math.ceil(total / limit)
-    }
+      totalPage: Math.ceil(total / limit),
+    },
   };
 };
 
@@ -231,7 +267,7 @@ const getProductsSortedByRating = async (query: any) => {
 const getSingleProductFromDb = async (id: string, query: any = {}) => {
   // Find product by ID and populate collections array to show collection details
   const productData = await product.findById(id).populate("collections");
-  
+
   if (!productData) {
     return null;
   }
@@ -241,11 +277,14 @@ const getSingleProductFromDb = async (id: string, query: any = {}) => {
   const reviewsQuery = {
     limit: query.limit || "10",
     page: query.page || "1",
-    sort: query.sort || "-createdAt"
+    sort: query.sort || "-createdAt",
   };
-  
-  const reviewsResult = await ReviewServices.getReviewsByProduct(id, reviewsQuery);
-  
+
+  const reviewsResult = await ReviewServices.getReviewsByProduct(
+    id,
+    reviewsQuery
+  );
+
   // Get rating data
   const ratingData = await ReviewServices.getAverageRatingForProduct(id);
 
@@ -267,16 +306,66 @@ const getSingleProductFromDb = async (id: string, query: any = {}) => {
  * @param payload - Partial product data to update
  * @returns Promise<IProduct | null> - Updated product document or null if not found
  */
-const updateProductIntoDb = async (id: string, payload: Partial<IProduct>) => {
-  // Find and update product with:
-  // - new: true returns the updated document
-  // - runValidators: true ensures schema validation on update
-  // - populate collections to show updated collection details
-  const result = await product.findByIdAndUpdate(id, payload, {
-    new: true,
-    runValidators: true,
-  }).populate("collections");
-  return result;
+const updateProductIntoDb = async (id: string, payload: any) => {
+  try {
+    const { imageFiles, ...updateData } = payload;
+
+    // Handle multiple image uploads to Cloudinary
+    if (imageFiles && Array.isArray(imageFiles) && imageFiles.length > 0) {
+      const existingProduct = await product
+        .findById(id)
+        .select("imagesPublicIds");
+
+      const uploadPromises = imageFiles.map(
+        async (file: Express.Multer.File) => {
+          const filePath = file.path.replace(/\\/g, "/");
+          const uploaded = await uploadImageToCloudinary(
+            filePath,
+            "products",
+            "medium"
+          );
+
+          // Delete temporary file after upload
+          try {
+            fs.unlinkSync(file.path);
+          } catch {}
+
+          return uploaded;
+        }
+      );
+
+      const uploadedImages = await Promise.all(uploadPromises);
+      updateData.images_urls = uploadedImages.map((img) => img.secure_url);
+      updateData.imagesPublicIds = uploadedImages.map((img) => img.public_id);
+
+      // Delete old images from Cloudinary
+      try {
+        if (
+          existingProduct?.imagesPublicIds &&
+          existingProduct.imagesPublicIds.length > 0
+        ) {
+          const deletePromises = existingProduct.imagesPublicIds.map(
+            (publicId) => deleteFromCloudinary(publicId)
+          );
+          await Promise.all(deletePromises);
+        }
+      } catch {}
+    }
+
+    // Find and update product with:
+    // - new: true returns the updated document
+    // - runValidators: true ensures schema validation on update
+    // - populate collections to show updated collection details
+    const result = await product
+      .findByIdAndUpdate(id, updateData, {
+        new: true,
+        runValidators: true,
+      })
+      .populate("collections");
+    return result;
+  } catch (error: any) {
+    throw new Error(error.message || "Failed to update product");
+  }
 };
 
 /**
@@ -289,7 +378,6 @@ const deleteProductFromDb = async (id: string) => {
   const result = await product.findByIdAndDelete(id);
   return result;
 };
-
 
 /**
  * Retrieves products that belong to a specific collection
@@ -318,8 +406,6 @@ const getProductsByCollection = async (collectionId: string, query: any) => {
     meta,
   };
 };
-
-
 
 const ProductServices = {
   createProductIntoDb,

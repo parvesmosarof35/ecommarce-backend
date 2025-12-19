@@ -8,6 +8,11 @@ import config from "../../config";
 import { ProfileUpdateResponse, RequestWithFile } from "./auth.interface";
 import QueryBuilder from "../../builder/QueryBuilder";
 import { user_search_filed } from "./auth.constant";
+import {
+  deleteFromCloudinary,
+  uploadImageToCloudinary,
+} from "../../utils/cloudinary";
+import fs from "fs";
 
 const loginUserIntoDb = async (payload: {
   email: string;
@@ -184,6 +189,7 @@ const changeMyProfileIntoDb = async (
       lastname?: string;
       gender?: string;
       photo?: string;
+      photoPublicId?: string;
       address?: string;
       phoneNumber?: string;
     } = {};
@@ -192,12 +198,31 @@ const changeMyProfileIntoDb = async (
     if (lastname) updateData.lastname = lastname;
     if (gender) updateData.gender = gender;
     if (address) updateData.address = address;
-    if (phoneNumber || phoneNumber==="") {
+    if (phoneNumber || phoneNumber === "") {
       updateData.phoneNumber = phoneNumber;
     }
 
     if (file) {
-      updateData.photo = file.path.replace(/\\/g, "/");
+      const filePath = file.path.replace(/\\/g, "/");
+      const existingUser = await users.findById(id).select("photoPublicId");
+      const uploaded = await uploadImageToCloudinary(
+        filePath,
+        "profiles",
+        "high"
+      );
+
+      updateData.photo = uploaded.secure_url;
+      updateData.photoPublicId = uploaded.public_id;
+
+      try {
+        fs.unlinkSync(file.path);
+      } catch {}
+
+      try {
+        if (existingUser?.photoPublicId) {
+          await deleteFromCloudinary(existingUser.photoPublicId);
+        }
+      } catch {}
     }
 
     if (Object.keys(updateData).length === 0) {
@@ -299,14 +324,16 @@ const isBlockAccountIntoDb = async (
   }
 };
 
-
-const find_by_all_admin_IntoDb = async (adminId: string, query: Record<string, unknown>) => {
-
-
+const find_by_all_admin_IntoDb = async (
+  adminId: string,
+  query: Record<string, unknown>
+) => {
   try {
     const allAdminQuery = new QueryBuilder(
       users
-        .find({ $or: [{ role: USER_ROLE.admin }, { role: USER_ROLE.superAdmin }] })
+        .find({
+          $or: [{ role: USER_ROLE.admin }, { role: USER_ROLE.superAdmin }],
+        })
         .select(
           "_id fastname lastname email phoneNumber role isVerify photo  status"
         ),
@@ -322,9 +349,7 @@ const find_by_all_admin_IntoDb = async (adminId: string, query: Record<string, u
     const meta = await allAdminQuery.countTotal();
 
     return { meta, all_admin };
-
-  }
-  catch (error: any) {
+  } catch (error: any) {
     throw new AppError(
       httpStatus.SERVICE_UNAVAILABLE,
       "issues by the find by all admin into db server unavailable",
@@ -332,11 +357,6 @@ const find_by_all_admin_IntoDb = async (adminId: string, query: Record<string, u
     );
   }
 };
-
-
-
-
-
 
 const AuthServices = {
   loginUserIntoDb,
@@ -346,7 +366,7 @@ const AuthServices = {
   findByAllUsersAdminIntoDb,
   deleteAccountIntoDb,
   isBlockAccountIntoDb,
-  find_by_all_admin_IntoDb
+  find_by_all_admin_IntoDb,
 };
 
 export default AuthServices;

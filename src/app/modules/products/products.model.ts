@@ -1,5 +1,10 @@
 import { Schema, model, Model } from "mongoose";
-import { IProduct, ProductModel, KeyIngredient, SkinType } from "./products.interface";
+import {
+  IProduct,
+  ProductModel,
+  KeyIngredient,
+  SkinType,
+} from "./products.interface";
 import AppError from "../../errors/AppError";
 import status from "http-status";
 
@@ -38,34 +43,52 @@ const ProductSchema = new Schema<IProduct, ProductModel>(
     images_urls: {
       type: [String],
       validate: {
-        validator: function(urls: string[]) {
+        validator: function (urls: string[]) {
           return urls.length <= 8;
         },
-        message: "Maximum 8 images allowed per product"
-      }
+        message: "Maximum 8 images allowed per product",
+      },
     },
-    categories: [{
-      type: String,
-      trim: true,
-    }],
+    imagesPublicIds: {
+      type: [String],
+      default: [],
+    },
+    categories: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
     skintype: {
       type: String,
       enum: {
         values: ["Dry", "Oily", "Combination", "Sensitive", "Normal"],
-        message: "Invalid skin type. Must be one of: Dry, Oily, Combination, Sensitive, Normal (case-sensitive)"
-      }
+        message:
+          "Invalid skin type. Must be one of: Dry, Oily, Combination, Sensitive, Normal (case-sensitive)",
+      },
     },
-    ingredients: [{
-      type: String,
-      enum: {
-        values: ["Hyaluronic Acid", "Vitamin C", "Retinol", "Niacinamide", "Peptides"],
-        message: "Invalid ingredient. Must be one of: Hyaluronic Acid, Vitamin C, Retinol, Niacinamide, Peptides (case-sensitive)"
-      }
-    }],
-    collections: [{
-      type: Schema.Types.ObjectId,
-      ref: "collections",
-    }],
+    ingredients: [
+      {
+        type: String,
+        enum: {
+          values: [
+            "Hyaluronic Acid",
+            "Vitamin C",
+            "Retinol",
+            "Niacinamide",
+            "Peptides",
+          ],
+          message:
+            "Invalid ingredient. Must be one of: Hyaluronic Acid, Vitamin C, Retinol, Niacinamide, Peptides (case-sensitive)",
+        },
+      },
+    ],
+    collections: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "collections",
+      },
+    ],
   },
   {
     timestamps: true,

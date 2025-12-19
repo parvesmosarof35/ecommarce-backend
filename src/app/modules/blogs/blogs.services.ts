@@ -4,7 +4,10 @@ import { BlogsResponse, RequestWithFile, TBlogs } from "./blogs.interface";
 import blogs from "./blogs.model";
 import QueryBuilder from "../../builder/QueryBuilder";
 import { search_query } from "./blogs.constant";
-import { deleteFromCloudinary, uploadImageToCloudinary } from "../../utils/cloudinary";
+import {
+  deleteFromCloudinary,
+  uploadImageToCloudinary,
+} from "../../utils/cloudinary";
 import fs from "fs";
 
 const createBlogsIntoDb = async (
@@ -19,15 +22,13 @@ const createBlogsIntoDb = async (
       throw new AppError(status.BAD_REQUEST, "Photo is required", "");
     }
 
-    const uploaded = await uploadImageToCloudinary(filePath, "blogs");
+    const uploaded = await uploadImageToCloudinary(filePath, "blogs", "medium");
     data.photo = uploaded.secure_url;
     data.photoPublicId = uploaded.public_id;
 
     try {
       fs.unlinkSync(req.file?.path as string);
-    } catch {
-      
-    }
+    } catch {}
 
     const blogsBuilder = new blogs({ ...data, adminId });
     const result = await blogsBuilder.save();
@@ -109,24 +110,24 @@ const updateBlogsIntoDb = async (
 
     if (filePath) {
       const existingBlog = await blogs.findById(id).select("photoPublicId");
-      const uploaded = await uploadImageToCloudinary(filePath, "blogs");
+      const uploaded = await uploadImageToCloudinary(
+        filePath,
+        "blogs",
+        "medium"
+      );
 
       updateData.photo = uploaded.secure_url;
       updateData.photoPublicId = uploaded.public_id;
 
       try {
         fs.unlinkSync(req.file?.path as string);
-      } catch {
-        
-      }
+      } catch {}
 
       try {
         if (existingBlog?.photoPublicId) {
           await deleteFromCloudinary(existingBlog.photoPublicId);
         }
-      } catch {
-        
-      }
+      } catch {}
     }
 
     if (Object.keys(updateData).length === 0) {

@@ -33,9 +33,9 @@ const TUserSchema = new Schema<TUser, UserModel>(
     },
 
     phoneNumber: {
-        type: String,
-        required: [false, "phoneNumber is Required"],
-        default: "",
+      type: String,
+      required: [false, "phoneNumber is Required"],
+      default: "",
     },
 
     verificationCode: {
@@ -68,6 +68,11 @@ const TUserSchema = new Schema<TUser, UserModel>(
     photo: {
       type: String,
       required: [false, "photo is not required"],
+      default: null,
+    },
+    photoPublicId: {
+      type: String,
+      required: [false, "photoPublicId is not required"],
       default: null,
     },
 
@@ -111,7 +116,7 @@ TUserSchema.set("toJSON", {
 
 // mongoose middleware
 TUserSchema.pre("save", async function (next) {
-  const user = this;
+  const user = this as any;
   if (user.isModified("password")) {
     user.password = await bcrypt.hash(
       user.password,

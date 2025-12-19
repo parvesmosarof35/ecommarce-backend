@@ -19,6 +19,7 @@ export type TUser = {
   isVerify: boolean;
   status: "isProgress" | "Blocked";
   photo?: string;
+  photoPublicId?: string;
   stripeAccountId?: string;
   isStripeConnected?: boolean;
   fcm?: string;
