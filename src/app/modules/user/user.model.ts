@@ -7,13 +7,9 @@ import config from "../../config";
 
 const TUserSchema = new Schema<TUser, UserModel>(
   {
-    fastname: {
+    fullname: {
       type: String,
-      required: [false, "user   fast name  is Required"],
-    },
-    lastname: {
-      type: String,
-      required: [false, "user  last name  is Required"],
+      required: [false, "user fullname is Required"],
     },
 
     password: { type: String, required: [false, "Password is Required"] },

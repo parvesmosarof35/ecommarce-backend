@@ -8,8 +8,10 @@ import auth from "../../middlewares/auth";
 
 const router = express.Router();
 
+// Create user (Admin creation) - Restricted to Super Admin
 router.post(
   "/create_user",
+  auth(USER_ROLE.superAdmin),
   validationRequest(UserValidationSchema.createUserZodSchema),
   UserController.createUser
 );
@@ -48,7 +50,7 @@ router.post(
 router.get("/find_by_user_growth", auth(USER_ROLE.admin, USER_ROLE.superAdmin), UserController.getUserGrowth);
 
 router.get("/recently_joined_user", auth(USER_ROLE.admin, USER_ROLE.superAdmin), UserController.recently_joined_user);
-router.delete("/delete_user/:id", auth(USER_ROLE.admin, USER_ROLE.superAdmin), UserController.deleteAllTypesOfUser);
+router.delete("/delete_user/:id", auth(USER_ROLE.superAdmin), UserController.deleteAllTypesOfUser);
 
 // user Growth
 // Recently Joined Users

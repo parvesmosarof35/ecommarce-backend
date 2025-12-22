@@ -520,7 +520,7 @@ const recently_joined_user_IntoDb = async (query: Record<string, unknown> = {}) 
     };
 
     const userQuery = new QueryBuilder(
-      users.find().select('fastname lastname photo phoneNumber email createdAt'),
+      users.find().select('fullname photo phoneNumber email createdAt'),
       finalQuery,
     )
       .filter()

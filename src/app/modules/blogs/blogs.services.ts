@@ -46,7 +46,7 @@ const createBlogsIntoDb = async (
 const findByAllBlogsIntoDb = async (query: Record<string, unknown>) => {
   try {
     const allBlogsQuery = new QueryBuilder(
-      blogs.find({}).select("-isDelete -createdAt -updatedAt"),
+      blogs.find({}).select("-isDelete -updatedAt"),
       query
     )
       .search(search_query)
@@ -72,8 +72,7 @@ const findBySpecificBlogsIntoDb = async (id: string) => {
     return await blogs
       .findById(id)
       .populate("adminId", {
-        fastname: 1,
-        lastname: 1,
+        fullname: 1,
         photo: 1,
       })
       .select("-isDelete  -updatedAt");

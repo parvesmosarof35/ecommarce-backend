@@ -3,14 +3,10 @@ import { USER_ACCESSIBILITY, USER_ROLE } from "./user.constant";
 
 const createUserZodSchema = z.object({
   body: z.object({
-    fastname: z
-      .string({ message: "fastname  is Required" })
+    fullname: z
+      .string({ message: "fullname is Required" })
       .min(1, { error: "min  1  character needed" })
-      .max(50, { error: "max 50 character accepted" }),
-    lastname: z
-      .string({ message: "lastname  is Required" })
-      .min(1, { error: "min  1  character needed" })
-      .max(50, { error: "max 50 character accepted" }),
+      .max(100, { error: "max 100 character accepted" }),
 
     password: z.string({ message: "Password is Required" }),
 

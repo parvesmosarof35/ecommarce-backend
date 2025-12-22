@@ -3,9 +3,7 @@ export interface TCarPlateValuationRequest {
   represent: string;
   notes?: string;
   buyerId: {
-    fastname: string;
-    
-    lastname: string;
+    fullname: string;
     address: string;
     phoneNumber: string;
     email: string;
@@ -103,7 +101,7 @@ export const generatePlateValuationEmail = (data: TCarPlateValuationRequest) => 
     <h3>Buyer Information</h3>
     <div class="info-item">
       <span class="label">Name:</span>
-      ${buyerId.fastname} ${buyerId.lastname}
+      ${buyerId.fullname}
     </div>
     <div class="info-item">
       <span class="label">Address:</span>

@@ -39,14 +39,10 @@ const resetVerification = z.object({
 const changeMyProfileSchema = z.object({
   body: z
     .object({
-      fastname: z
-        .string({ message: "fastname  is Required" })
+      fullname: z
+        .string({ message: "fullname is Required" })
         .min(1, { error: "min  1  character needed" })
-        .max(50, { error: "max 50 character accepted" }),
-      lastname: z
-        .string({ message: "lastname  is Required" })
-        .min(1, { error: "min  1  character needed" })
-        .max(50, { error: "max 50 character accepted" }),
+        .max(100, { error: "max 100 character accepted" }),
       photo: z.string({ error: "photo is require" }).optional(),
       gender: z.enum([GENDER.male, GENDER.female, GENDER.others]).optional(),
       phoneNumber: z

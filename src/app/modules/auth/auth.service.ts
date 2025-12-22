@@ -155,7 +155,7 @@ const myprofileIntoDb = async (id: string) => {
   try {
     return await users
       .findById(id)
-      .select("fastname lastname email  address photo phoneNumber");
+      .select("fullname email  address photo phoneNumber role");
   } catch (error: any) {
     throw new AppError(
       httpStatus.SERVICE_UNAVAILABLE,
@@ -176,17 +176,15 @@ const changeMyProfileIntoDb = async (
 ): Promise<ProfileUpdateResponse> => {
   try {
     const file = req.file;
-    const { fastname, lastname, gender, address, phoneNumber } = req.body as {
-      fastname?: string;
-      lastname?: string;
+    const { fullname, gender, address, phoneNumber } = req.body as {
+      fullname?: string;
       gender?: string;
       address?: string;
       phoneNumber?: string;
     };
 
     const updateData: {
-      fastname?: string;
-      lastname?: string;
+      fullname?: string;
       gender?: string;
       photo?: string;
       photoPublicId?: string;
@@ -194,8 +192,7 @@ const changeMyProfileIntoDb = async (
       phoneNumber?: string;
     } = {};
 
-    if (fastname) updateData.fastname = fastname;
-    if (lastname) updateData.lastname = lastname;
+    if (fullname) updateData.fullname = fullname;
     if (gender) updateData.gender = gender;
     if (address) updateData.address = address;
     if (phoneNumber || phoneNumber === "") {
@@ -264,7 +261,7 @@ const findByAllUsersAdminIntoDb = async (query: Record<string, unknown>) => {
       users
         .find()
         .select(
-          "_id fastname lastname email phoneNumber role isVerify photo  status"
+          "_id fullname email phoneNumber role isVerify photo status createdAt"
         ),
       query
     )
@@ -335,7 +332,7 @@ const find_by_all_admin_IntoDb = async (
           $or: [{ role: USER_ROLE.admin }, { role: USER_ROLE.superAdmin }],
         })
         .select(
-          "_id fastname lastname email phoneNumber role isVerify photo  status"
+          "_id fullname email phoneNumber role isVerify photo  status"
         ),
       query
     )

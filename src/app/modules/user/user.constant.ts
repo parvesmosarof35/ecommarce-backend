@@ -29,8 +29,7 @@ export interface UserResponse {
 
 export const superAdminCredentials = {
 
-  fastname: "Super",
-  lastname: "Admin",
+  fullname: "Super Admin",
   email: `${config.SUPER_ADMIN_EMAIL}`,
   password: "$2a$12$NjfyNKCKWgTotxcyGXCcwOwvmf91bHSxgYzGQK83pVDsi51mDA.OO",  // hashed 123456
   phoneNumber:"01722305054",
