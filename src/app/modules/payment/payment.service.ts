@@ -10,6 +10,7 @@ import {
   CartPaymentMetadata,
 } from "./cart-payment.interface";
 import { CartDocument } from "../cart/cart.interface";
+import { compressMetadata, decompressMetadata } from "./metadata.utils";
 
 const stripe = new Stripe(
   config.stripe_payment_gateway.stripe_secret_key || "",
@@ -30,10 +31,16 @@ class PaymentService {
     userId: string
   ): Promise<CartPaymentResponse> {
     try {
+      console.log('=== PAYMENT SERVICE CREATE CART CHECKOUT ===');
+      console.log('Payment request:', paymentRequest);
+      console.log('User ID:', userId);
+      
       // Get user's cart items from database
       const cartResult = await CartServices.getCartByUser(userId, {});
+      console.log('Cart result:', cartResult);
 
       if (!cartResult.result || cartResult.result.length === 0) {
+        console.log('ERROR: Empty cart');
         return {
           status: false,
           message:
@@ -43,8 +50,10 @@ class PaymentService {
 
       // Calculate total amount
       const totalAmount = cartResult.summary.subtotal;
+      console.log('Total amount:', totalAmount);
 
       if (totalAmount <= 0) {
+        console.log('ERROR: Invalid cart total');
         return {
           status: false,
           message: "Invalid cart total. Please check your cart items.",
@@ -71,6 +80,7 @@ class PaymentService {
           };
         }
       );
+      console.log('Transformed cart items:', cartItems);
 
       // Create metadata for order creation after payment
       const metadata: CartPaymentMetadata = {
@@ -82,8 +92,15 @@ class PaymentService {
         currency: paymentRequest.currency || "usd",
         notes: paymentRequest.notes,
       };
+      console.log('Original metadata:', metadata);
+      console.log('Original metadata JSON length:', JSON.stringify(metadata).length);
 
-      const session = await stripe.checkout.sessions.create({
+      // Compress metadata to handle Stripe's character limits (500 chars as Stripe enforces)
+      const compressedMetadata = compressMetadata(metadata, 500);
+      console.log('Compressed metadata:', compressedMetadata);
+      console.log('Compressed metadata field sizes:', Object.entries(compressedMetadata).map(([key, value]) => ({ key, length: value.length })));
+
+      const sessionParams: any = {
         payment_method_types: ["card"],
         line_items: cartItems.map((item) => ({
           price_data: {
@@ -102,10 +119,14 @@ class PaymentService {
         metadata: {
           type: "cart_payment",
           customerId: userId,
-          cartData: JSON.stringify(metadata),
+          ...compressedMetadata,
         },
-        // Remove customer field since userId is not a Stripe customer ID
-      });
+      };
+      console.log('Stripe session params:', sessionParams);
+      console.log('Final metadata field sizes:', Object.entries(sessionParams.metadata).map(([key, value]) => ({ key, length: (value as string).length })));
+
+      const session = await stripe.checkout.sessions.create(sessionParams);
+      console.log('Stripe session created successfully:', session.id);
 
       return {
         status: true,
@@ -116,6 +137,11 @@ class PaymentService {
         },
       };
     } catch (error: any) {
+      console.log('=== PAYMENT SERVICE ERROR ===');
+      console.log('Error details:', error);
+      console.log('Error message:', error.message);
+      console.log('Error stack:', error.stack);
+      
       return {
         status: false,
         message: error.message || "Failed to create cart checkout session",
@@ -191,21 +217,15 @@ class PaymentService {
           // Handle direct payments
           if (paymentIntent.metadata?.type === "direct_payment") {
             try {
-              const paymentData = JSON.parse(
-                paymentIntent.metadata.items || "[]"
-              );
+              const paymentData = decompressMetadata(paymentIntent.metadata);
               const orderResult = await this.orderService.createOrder({
                 customerId: paymentIntent.metadata.customerId,
-                items: paymentData,
-                totalAmount: parseFloat(paymentIntent.metadata.totalAmount),
-                shippingAddress: JSON.parse(
-                  paymentIntent.metadata.shippingAddress
-                ),
-                billingAddress: JSON.parse(
-                  paymentIntent.metadata.billingAddress
-                ),
-                notes: paymentIntent.metadata.notes,
-                currency: paymentIntent.metadata.currency,
+                items: paymentData.items,
+                totalAmount: parseFloat(paymentData.totalAmount),
+                shippingAddress: paymentData.shippingAddress,
+                billingAddress: paymentData.billingAddress,
+                notes: paymentData.notes,
+                currency: paymentData.currency,
               });
 
               if (orderResult.status && orderResult.data?.order) {
@@ -241,9 +261,7 @@ class PaymentService {
           // Handle cart-based payments - create order automatically
           if (paymentIntent.metadata?.type === "cart_payment") {
             try {
-              const cartData: CartPaymentMetadata = JSON.parse(
-                paymentIntent.metadata.cartData
-              );
+              const cartData: CartPaymentMetadata = decompressMetadata(paymentIntent.metadata);
               const orderResult = await this.orderService.createOrder({
                 customerId: cartData.customerId,
                 items: cartData.items,
@@ -360,9 +378,7 @@ class PaymentService {
           // Handle cart-based checkout sessions - create order automatically
           if (session.metadata?.type === "cart_payment") {
             try {
-              const cartData: CartPaymentMetadata = JSON.parse(
-                session.metadata.cartData
-              );
+              const cartData: CartPaymentMetadata = decompressMetadata(session.metadata);
               const orderResult = await this.orderService.createOrder({
                 customerId: cartData.customerId,
                 items: cartData.items,
@@ -489,16 +505,19 @@ class PaymentService {
       );
 
       // Create metadata for order creation
-      const metadata: any = {
+      const paymentMetadata: any = {
         type: "direct_payment",
         customerId: userId,
-        items: JSON.stringify(cartItems),
+        items: cartItems,
         totalAmount,
         shippingAddress: paymentRequest.shippingAddress,
         billingAddress: paymentRequest.billingAddress,
         currency: paymentRequest.currency || "usd",
         notes: paymentRequest.notes,
       };
+
+      // Compress metadata to handle Stripe's character limits (500 chars as Stripe enforces)
+      const compressedMetadata = compressMetadata(paymentMetadata, 500);
 
       // Create payment intent directly (no checkout session)
       const paymentIntent = await stripe.paymentIntents.create({
@@ -507,7 +526,11 @@ class PaymentService {
         payment_method: paymentRequest.paymentMethodId,
         confirmation_method: "manual",
         confirm: true, // Confirm immediately
-        metadata: metadata,
+        metadata: {
+          type: "direct_payment",
+          customerId: userId,
+          ...compressedMetadata,
+        },
         shipping: {
           name: `${paymentRequest.shippingAddress.street} ${paymentRequest.shippingAddress.city}`,
           address: {

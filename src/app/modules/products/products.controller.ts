@@ -151,6 +151,25 @@ const getRelatedProducts: RequestHandler = catchAsync(async (req, res) => {
   });
 });
 
+/**
+ * Controller: Get featured products
+ * Publicly accessible endpoint
+ * Handles HTTP GET requests to /product/getfeaturedproducts
+ */
+const getFeaturedProducts: RequestHandler = catchAsync(async (req, res) => {
+  // Call service to get featured products
+  const result = await ProductServices.getFeaturedProducts(req.query);
+
+  // Send response with featured products and pagination metadata
+  sendResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: "Featured products retrieved successfully",
+    meta: result.meta,
+    data: result.result,
+  });
+});
+
 const ProductControllers = {
   createProduct,
   getAllProducts,
@@ -159,6 +178,7 @@ const ProductControllers = {
   deleteProduct,
   getProductsByCollection,
   getRelatedProducts,
+  getFeaturedProducts,
 };
 
 export default ProductControllers;

@@ -498,6 +498,19 @@ const getRelatedProducts = async (productId: string, query: any = {}) => {
   };
 };
 
+/**
+ * Retrieves featured products from the database
+ * @param query - Query parameters for search, sort, pagination
+ * @returns Promise<{result: IProduct[], meta: object}> - Featured products array with rating data and metadata
+ */
+const getFeaturedProducts = async (query: any) => {
+  // Set isFeatured filter to true to get only featured products
+  const featuredQuery = { ...query, isFeatured: "true" };
+  
+  // Use the existing getAllProductsFromDb method with the featured filter
+  return await getAllProductsFromDb(featuredQuery);
+};
+
 const ProductServices = {
   createProductIntoDb,
   getAllProductsFromDb,
@@ -506,6 +519,7 @@ const ProductServices = {
   deleteProductFromDb,
   getProductsByCollection,
   getRelatedProducts,
+  getFeaturedProducts,
 };
 
 export default ProductServices;

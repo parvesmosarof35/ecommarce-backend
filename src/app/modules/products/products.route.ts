@@ -149,6 +149,8 @@ router.get("/", ProductControllers.getAllProducts);
 
 router.get("/getrelatedproducts/:id", ProductControllers.getRelatedProducts);
 
+router.get("/getfeaturedproducts", ProductControllers.getFeaturedProducts);
+
 router.get(
   "/collection/:collectionId",
   ProductControllers.getProductsByCollection

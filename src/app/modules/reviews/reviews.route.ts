@@ -5,6 +5,9 @@ import { USER_ROLE } from "../user/user.constant";
 
 const router = express.Router();
 
+// Admin only routes
+router.delete("/admin/:id", auth(USER_ROLE.admin, USER_ROLE.superAdmin), ReviewControllers.deleteReview);
+
 // Authenticated user routes - Create, Update, Delete reviews
 router.post("/", auth(USER_ROLE.buyer, USER_ROLE.seller, USER_ROLE.admin, USER_ROLE.superAdmin), ReviewControllers.createReview);
 router.put("/:id", auth(USER_ROLE.buyer, USER_ROLE.seller, USER_ROLE.admin, USER_ROLE.superAdmin), ReviewControllers.updateReview);

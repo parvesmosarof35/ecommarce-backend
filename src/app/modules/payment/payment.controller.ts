@@ -17,8 +17,15 @@ class PaymentControllerClass {
   createCartCheckoutSession = catchAsync(
     async (req: Request, res: Response) => {
       try {
+        // Log incoming request
+        console.log('=== CART CHECKOUT SESSION REQUEST ===');
+        console.log('Request headers:', req.headers);
+        console.log('Request body:', req.body);
+        console.log('User from token:', req.user);
+        
         const userId = req.user?.id;
         if (!userId) {
+          console.log('ERROR: User authentication required');
           return sendResponse(res, {
             statusCode: 401,
             success: false,
@@ -31,29 +38,46 @@ class PaymentControllerClass {
           CartPaymentValidationSchemas.createCartCheckoutSessionSchema.parse(
             req
           );
+        
+        console.log('Validated data:', validatedData);
+        
         const result = await this.paymentService.createCartCheckoutSession(
           validatedData.body,
           userId
         );
 
+        console.log('Payment service result:', result);
+
         if (result.status) {
-          sendResponse(res, {
+          const response = {
             statusCode: 200,
             success: true,
             message: result.message,
             data: result.data,
-          });
+          };
+          console.log('=== SUCCESS RESPONSE ===');
+          console.log('Response:', response);
+          
+          sendResponse(res, response);
         } else {
-          sendResponse(res, {
+          const response = {
             statusCode: 400,
             success: false,
             message: result.message,
             data: null,
-          });
+          };
+          console.log('=== ERROR RESPONSE ===');
+          console.log('Response:', response);
+          
+          sendResponse(res, response);
         }
       } catch (error) {
+        console.log('=== CATCH BLOCK ERROR ===');
+        console.log('Error:', error);
+        
         if (error instanceof ZodError) {
           const zodError = handelZodError(error);
+          console.log('Zod error:', zodError);
           sendResponse(res, {
             statusCode: zodError.statusCode,
             success: false,
@@ -62,6 +86,7 @@ class PaymentControllerClass {
             data: null,
           });
         } else {
+          console.log('Generic error:', error);
           sendResponse(res, {
             statusCode: 500,
             success: false,
