@@ -34,30 +34,26 @@ class QueryBuilder<T> {
   filter() {
     let queryObject = { ...this.query };
     
-    // Handle maxPrice range filtering
-    if (this.query && this.query.maxPrice) {
-      queryObject.price = {
-        $gte: Number(this.query.minPrice) || 0,
-        $lte: Number(this.query.maxPrice),
-      };
-    }
-    
-    // Handle maxpricerange (alternative parameter name)
-    if (this.query && this.query.maxpricerange) {
-      queryObject.price = {
-        $gte: Number(this.query.minPrice) || 0,
-        $lte: Number(this.query.maxpricerange),
-      };
-    }
-    
-    if (this.query?.releaseDate) {
-      queryObject.releaseDate = {
-        $gte: this.query?.releaseDate as string,
-        $lte: this.query?.releaseDate as string,
-      };
-    }
+    // Exclude pagination, sort, and custom filter fields
+    const excludeFields = ["searchTerm", "sort", "limit", "page", "fields", "minPrice", "maxPrice", "maxpricerange", "releaseDate", "maxprice", "collections"];
+    excludeFields.forEach((el) => delete queryObject[el]);
 
-    // Handle categories filtering
+    // Robustly handle flat bracket keys (e.g. "price[gte]") manually to support shallow query parsers
+    Object.keys(queryObject).forEach(key => {
+      const match = key.match(/^(\w+)\[(\w+)\]$/);
+      if (match) {
+        const [, field, operator] = match;
+        if (!queryObject[field]) {
+          queryObject[field] = {};
+        }
+        if (typeof queryObject[field] === 'object' && queryObject[field] !== null) {
+          (queryObject[field] as Record<string, unknown>)[operator] = queryObject[key];
+        }
+        delete queryObject[key];
+      }
+    });
+
+    // Handle categories filtering with $in
     if (this.query?.categories) {
       const categories = Array.isArray(this.query.categories) 
         ? this.query.categories 
@@ -65,7 +61,15 @@ class QueryBuilder<T> {
       queryObject.categories = { $in: categories };
     }
 
-    // Handle skintype filtering
+    // Handle collections filtering with $in
+    if (this.query?.collections) {
+      const collections = Array.isArray(this.query.collections) 
+        ? this.query.collections 
+        : [this.query.collections];
+      queryObject.collections = { $in: collections };
+    }
+
+    // Handle skintype filtering with $in
     if (this.query?.skintype) {
       const skinTypes = Array.isArray(this.query.skintype) 
         ? this.query.skintype 
@@ -73,7 +77,7 @@ class QueryBuilder<T> {
       queryObject.skintype = { $in: skinTypes };
     }
 
-    // Handle ingredients filtering
+    // Handle ingredients filtering with $in
     if (this.query?.ingredients) {
       const ingredients = Array.isArray(this.query.ingredients) 
         ? this.query.ingredients 
@@ -81,11 +85,20 @@ class QueryBuilder<T> {
       queryObject.ingredients = { $in: ingredients };
     }
 
-    // Remove only non-filter fields that are not part of the query conditions
-    const excludeField = ["searchTerm", "sort", "limit", "page", "fields", "minPrice", "maxPrice", "maxpricerange", "releaseDate"];
-    excludeField.forEach((el) => delete queryObject[el]);
+    // Handle maxprice
+    if (this.query?.maxprice) {
+      if (!queryObject.price) queryObject.price = {};
+      (queryObject.price as any).$lte = Number(this.query?.maxprice);
+    }
 
-    this.modelQuery = this.modelQuery.find(queryObject as FilterQuery<T>);
+    // Advanced filtering: Convert gt, gte, lt, lte to mongo operators ($gt, $gte, etc.)
+    let queryStr = JSON.stringify(queryObject);
+    queryStr = queryStr.replace(
+      /"(gt|gte|lt|lte)":/g,
+      (match) => match.replace('"', '"$')
+    );
+
+    this.modelQuery = this.modelQuery.find(JSON.parse(queryStr) as FilterQuery<T>);
     return this;
   }
 

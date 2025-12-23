@@ -407,6 +407,97 @@ const getProductsByCollection = async (collectionId: string, query: any) => {
   };
 };
 
+/**
+ * Retrieves related products based on categories, skin type, or ingredients
+ * @param productId - Product ID to find related products for
+ * @param query - Additional query parameters for pagination and limit
+ * @returns Promise<{result: IProduct[], meta: object}> - Related products array and metadata
+ */
+const getRelatedProducts = async (productId: string, query: any = {}) => {
+  // First, get the current product to understand its attributes
+  const currentProduct = await product.findById(productId);
+  
+  if (!currentProduct) {
+    return {
+      result: [],
+      meta: {
+        page: 1,
+        limit: query.limit || 10,
+        total: 0,
+        totalPage: 0,
+      },
+    };
+  }
+
+  // Build query to find related products
+  // Priority: Same category > Same skin type > Same ingredients
+  const orConditions = [];
+  
+  // Add condition for same categories
+  if (currentProduct.categories && currentProduct.categories.length > 0) {
+    orConditions.push({
+      categories: { $in: currentProduct.categories }
+    });
+  }
+  
+  // Add condition for same skin type
+  if (currentProduct.skintype) {
+    orConditions.push({
+      skintype: currentProduct.skintype
+    });
+  }
+  
+  // Add condition for same ingredients
+  if (currentProduct.ingredients && currentProduct.ingredients.length > 0) {
+    orConditions.push({
+      ingredients: { $in: currentProduct.ingredients }
+    });
+  }
+
+  // Build the final query
+  let relatedProductsQuery = product.find({
+    _id: { $ne: productId }, // Exclude the current product
+    $or: orConditions.length > 0 ? orConditions : [{ isFeatured: true }] // Fallback to featured products if no attributes
+  }).populate("collections");
+
+  // Apply pagination
+  const limit = parseInt(query.limit) || 10;
+  const page = parseInt(query.page) || 1;
+  const skip = (page - 1) * limit;
+
+  const result = await relatedProductsQuery.skip(skip).limit(limit);
+  
+  // Add rating data to each related product
+  const productsWithRatings = await Promise.all(
+    result.map(async (product: any) => {
+      const ratingData = await ReviewServices.getAverageRatingForProduct(
+        product._id.toString()
+      );
+      return {
+        ...product.toObject(),
+        averageRating: ratingData.averageRating,
+        totalReviews: ratingData.totalReviews,
+      };
+    })
+  );
+
+  // Get total count for pagination
+  const totalCount = await product.countDocuments({
+    _id: { $ne: productId },
+    $or: orConditions.length > 0 ? orConditions : [{ isFeatured: true }]
+  });
+
+  return {
+    result: productsWithRatings,
+    meta: {
+      page,
+      limit,
+      total: totalCount,
+      totalPage: Math.ceil(totalCount / limit),
+    },
+  };
+};
+
 const ProductServices = {
   createProductIntoDb,
   getAllProductsFromDb,
@@ -414,6 +505,7 @@ const ProductServices = {
   updateProductIntoDb,
   deleteProductFromDb,
   getProductsByCollection,
+  getRelatedProducts,
 };
 
 export default ProductServices;

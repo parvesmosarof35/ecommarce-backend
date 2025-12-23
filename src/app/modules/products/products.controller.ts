@@ -129,6 +129,28 @@ const getProductsByCollection: RequestHandler = catchAsync(async (req, res) => {
   });
 });
 
+/**
+ * Controller: Get related products based on categories, skin type, or ingredients
+ * Publicly accessible endpoint
+ * Handles HTTP GET requests to /product/getrelatedproducts/:id
+ */
+const getRelatedProducts: RequestHandler = catchAsync(async (req, res) => {
+  // Extract product ID from URL parameters
+  const { id } = req.params;
+
+  // Call service to get related products
+  const result = await ProductServices.getRelatedProducts(id, req.query);
+
+  // Send response with related products and pagination metadata
+  sendResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: "Related products retrieved successfully",
+    meta: result.meta,
+    data: result.result,
+  });
+});
+
 const ProductControllers = {
   createProduct,
   getAllProducts,
@@ -136,6 +158,7 @@ const ProductControllers = {
   updateProduct,
   deleteProduct,
   getProductsByCollection,
+  getRelatedProducts,
 };
 
 export default ProductControllers;

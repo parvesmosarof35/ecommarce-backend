@@ -137,6 +137,7 @@ router.put(
   },
   ProductControllers.updateProduct
 );
+
 router.delete(
   "/:id",
   auth(USER_ROLE.admin, USER_ROLE.superAdmin),
@@ -145,6 +146,9 @@ router.delete(
 
 // Public routes - Get products
 router.get("/", ProductControllers.getAllProducts);
+
+router.get("/getrelatedproducts/:id", ProductControllers.getRelatedProducts);
+
 router.get(
   "/collection/:collectionId",
   ProductControllers.getProductsByCollection
