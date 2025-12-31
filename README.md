@@ -1,6 +1,8 @@
 # E-commerce Backend API
 
 A robust and scalable TypeScript-based backend for e-commerce applications, built with Express.js and MongoDB.
+https://ecommarce-backend-dsoe.onrender.com/
+(live)
 
 ## 🚀 Features
 
@@ -40,7 +42,7 @@ A robust and scalable TypeScript-based backend for e-commerce applications, buil
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/yourusername/ecommarce-backend.git
+   git clone https://github.com/parvesmosarof35/ecommarce-backend.git
    cd ecommarce-backend
    ```
 
