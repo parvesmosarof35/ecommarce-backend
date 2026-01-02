@@ -511,10 +511,33 @@ const getFeaturedProducts = async (query: any) => {
   return await getAllProductsFromDb(featuredQuery);
 };
 
+/**
+ * Search products by name with minimal data for fast response
+ * @param searchTerm - Search term to match against product names
+ * @returns Promise<Array<{_id: string, name: string, images_urls: string[]}>> - Array of minimal product data
+ */
+const searchProducts = async (searchTerm: string) => {
+  if (!searchTerm || typeof searchTerm !== 'string' || searchTerm.trim() === '') {
+    return [];
+  }
+
+  const searchRegex = new RegExp(searchTerm, 'i'); // Case-insensitive search
+  
+  return await product
+    .find({
+      name: { $regex: searchRegex },
+      isDeleted: { $ne: true }
+    })
+    .select('_id name images_urls')
+    .lean()
+    .exec();
+};
+
 const ProductServices = {
   createProductIntoDb,
   getAllProductsFromDb,
   getSingleProductFromDb,
+  searchProducts,
   updateProductIntoDb,
   deleteProductFromDb,
   getProductsByCollection,

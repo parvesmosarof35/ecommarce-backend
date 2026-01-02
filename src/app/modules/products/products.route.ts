@@ -147,6 +147,9 @@ router.delete(
 // Public routes - Get products
 router.get("/", ProductControllers.getAllProducts);
 
+// Fast search endpoint - returns only id, name, and first image
+router.get("/search", ProductControllers.searchProducts);
+
 router.get("/getrelatedproducts/:id", ProductControllers.getRelatedProducts);
 
 router.get("/getfeaturedproducts", ProductControllers.getFeaturedProducts);

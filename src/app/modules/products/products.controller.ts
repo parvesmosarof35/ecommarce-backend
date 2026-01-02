@@ -170,6 +170,28 @@ const getFeaturedProducts: RequestHandler = catchAsync(async (req, res) => {
   });
 });
 
+/**
+ * Controller: Search products by name with minimal data
+ * Publicly accessible endpoint
+ * Handles HTTP GET requests to /product/search?q=searchTerm
+ */
+const searchProducts: RequestHandler = catchAsync(async (req, res) => {
+  const searchTerm = req.query.q as string;
+  
+  // Call service to search products
+  const products = await ProductServices.searchProducts(searchTerm);
+
+  // Send response with minimal product data
+  sendResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: products.length > 0 
+      ? 'Products found successfully' 
+      : 'No products found matching your search',
+    data: products,
+  });
+});
+
 const ProductControllers = {
   createProduct,
   getAllProducts,
@@ -179,6 +201,7 @@ const ProductControllers = {
   getProductsByCollection,
   getRelatedProducts,
   getFeaturedProducts,
+  searchProducts,
 };
 
 export default ProductControllers;

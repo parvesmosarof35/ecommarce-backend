@@ -12,6 +12,7 @@ import WishlistRoutes from "../modules/wishlists/wishlists.route";
 import CartRoutes from "../modules/cart/cart.route";
 import PaymentRoutes from "../modules/payment/payment.routes";
 import OrderRoutes from "../modules/order/order.routes";
+import { DashboardRoutes } from "../modules/dashboardstats/dashboard.router";
 
 
 
@@ -69,6 +70,10 @@ const moduleRoutes = [
   {
     path: "/faq",
     route: FaqRoutes,
+  },
+  {
+    path: "/dashboard",
+    route: DashboardRoutes,
   },
 ];
 
