@@ -50,8 +50,8 @@ const getDashboardStats = catchAsync(async (req: Request, res: Response) => {
     const recentOrders = await Order.find()
       .sort({ createdAt: -1 })
       .limit(5)
-      .populate('user', 'name email')
-      .populate('items.product', 'name price');
+      .populate('customerId', 'fullname email')
+      .populate('items.productId', 'name price');
 
     // Get top selling products
     const topSellingProducts = await Product.aggregate([
@@ -225,7 +225,7 @@ const getRecentUsers = catchAsync(async (req: Request, res: Response) => {
     const formattedUsers = recentUsers.map((user: any) => ({
       name: user.fullname,
       email: user.email,
-      registrationDate: user.createdAt.toISOString().split('T')[0]
+      registrationDate: user.createdAt ? user.createdAt.toISOString().split('T')[0] : 'Unknown'
     }));
 
     sendResponse(res, {

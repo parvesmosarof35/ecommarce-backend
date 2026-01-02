@@ -399,32 +399,6 @@ You can import this collection directly into Postman:
 
 ---
 
-## Quick Test Commands
-
-You can also test these endpoints using curl:
-
-```bash
-# Get dashboard stats
-curl -X GET "{{BASE_URL}}/api/dashboard/get-stats" \
-  -H "Authorization: Bearer {{ADMIN_TOKEN}}" \
-  -H "Content-Type: application/json"
-
-# Get user growth for 2026
-curl -X GET "{{BASE_URL}}/api/dashboard/user-growth?year=2026" \
-  -H "Authorization: Bearer {{ADMIN_TOKEN}}" \
-  -H "Content-Type: application/json"
-
-# Get recent orders (limit 7)
-curl -X GET "{{BASE_URL}}/api/dashboard/recent-orders?limit=7" \
-  -H "Authorization: Bearer {{ADMIN_TOKEN}}" \
-  -H "Content-Type: application/json"
-
-# Get recent users (limit 7)
-curl -X GET "{{BASE_URL}}/api/dashboard/recent-users?limit=7" \
-  -H "Authorization: Bearer {{ADMIN_TOKEN}}" \
-  -H "Content-Type: application/json"
-```
-
 ---
 
 **Note:** Make sure your server is running and you have a valid admin/superadmin token before testing these endpoints.
