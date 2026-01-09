@@ -1,5 +1,5 @@
 {
-  "name": "ts-express-kit",
+  "name": "ecommerce-backend",
   "version": "1.1.4",
   "description": "A TypeScript starter kit for building Express applications with best practices.",
   "main": "index.js",
