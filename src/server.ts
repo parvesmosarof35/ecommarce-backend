@@ -107,5 +107,5 @@ async function main() {
 }
 
 main().then(() => {
-  console.log("-- Mandhirhoth server is running---");
+  console.log("-- ecommerce server is running---");
 });
