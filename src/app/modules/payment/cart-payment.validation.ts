@@ -8,6 +8,8 @@ const createCartCheckoutSessionSchema = z.object({
       state: z.string({ message: "State is required" }),
       postalCode: z.string({ message: "Postal code is required" }),
       country: z.string({ message: "Country is required" }),
+      phone: z.string({ message: "Phone is required" }),
+      email: z.string({ message: "Email is required" }),
     }),
     billingAddress: z
       .object({
@@ -16,6 +18,8 @@ const createCartCheckoutSessionSchema = z.object({
         state: z.string(),
         postalCode: z.string(),
         country: z.string(),
+        phone: z.string(),
+        email: z.string(),
       })
       .optional(),
     currency: z.string().default("usd"),
@@ -33,6 +37,8 @@ const createDirectPaymentSchema = z.object({
       state: z.string({ message: "State is required" }),
       postalCode: z.string({ message: "Postal code is required" }),
       country: z.string({ message: "Country is required" }),
+      phone: z.string({ message: "Phone is required" }),
+      email: z.string({ message: "Email is required" }),
     }),
     billingAddress: z
       .object({
@@ -41,6 +47,8 @@ const createDirectPaymentSchema = z.object({
         state: z.string(),
         postalCode: z.string(),
         country: z.string(),
+        phone: z.string(),
+        email: z.string(),
       })
       .optional(),
     notes: z.string().optional(),
