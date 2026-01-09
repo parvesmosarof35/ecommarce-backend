@@ -108,6 +108,16 @@ const find_by_all_admin: RequestHandler = catchAsync(async (req, res) => {
 
 })
 
+const getSingleUserById: RequestHandler = catchAsync(async (req, res) => {
+  const result = await AuthServices.getSingleUserByIdIntoDb(req.params.id);
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Successfully Find Single User",
+    data: result,
+  });
+})
+
 const AuthController = {
   loginUser,
   refreshToken,
@@ -116,7 +126,8 @@ const AuthController = {
   findByAllUsersAdmin,
   deleteAccount,
   isBlockAccount,
-  find_by_all_admin
+  find_by_all_admin,
+  getSingleUserById
 };
 
 export default AuthController;

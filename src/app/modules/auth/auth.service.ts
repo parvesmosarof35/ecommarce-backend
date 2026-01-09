@@ -355,6 +355,29 @@ const find_by_all_admin_IntoDb = async (
   }
 };
 
+const getSingleUserByIdIntoDb = async (id: string) => {
+  try {
+    const result = await users
+      .findById(id)
+      .select(
+        "_id fullname email phoneNumber role isVerify photo status createdAt address gender"
+      );
+    
+    if (!result) {
+      throw new AppError(httpStatus.NOT_FOUND, "User not found", "");
+    }
+    
+    return result;
+  } catch (error: any) {
+    if (error instanceof AppError) throw error;
+    throw new AppError(
+      httpStatus.SERVICE_UNAVAILABLE,
+      "issues by the get single user by id into db server unavailable",
+      error
+    );
+  }
+};
+
 const AuthServices = {
   loginUserIntoDb,
   refreshTokenIntoDb,
@@ -364,6 +387,7 @@ const AuthServices = {
   deleteAccountIntoDb,
   isBlockAccountIntoDb,
   find_by_all_admin_IntoDb,
+  getSingleUserByIdIntoDb,
 };
 
 export default AuthServices;

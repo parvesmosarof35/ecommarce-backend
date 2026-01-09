@@ -53,6 +53,12 @@ router.get(
   AuthController.findByAllUsersAdmin
 );
 
+router.get(
+  "/get_single_user/:id",
+  auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+  AuthController.getSingleUserById
+);
+
 router.delete(
   "/delete_account/:id",
   auth(USER_ROLE.seller, USER_ROLE.buyer, USER_ROLE.buyer, USER_ROLE.admin, USER_ROLE.superAdmin),

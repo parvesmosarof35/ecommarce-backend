@@ -13,19 +13,36 @@ class QueryBuilder<T> {
     const searchTerm = this?.query?.searchTerm;
 
     if (searchTerm) {
-      const stringFields = searchableFields.filter((field) => {
+      const searchConditions: any[] = [];
+
+      searchableFields.forEach((field) => {
         const schemaPath = this.modelQuery.model.schema.path(field);
-        return schemaPath && schemaPath.instance === "String";
+        
+        if (schemaPath && schemaPath.instance === "String") {
+          // String fields - use regex search
+          searchConditions.push({
+            [field]: { $regex: searchTerm, $options: "i" },
+          });
+        } else if (field === '_id') {
+          // ObjectId field - try to convert to ObjectId for exact match
+          try {
+            const { ObjectId } = require('mongoose');
+            if (ObjectId.isValid(searchTerm)) {
+              searchConditions.push({
+                [field]: new ObjectId(searchTerm),
+              });
+            }
+          } catch (error) {
+            // Invalid ObjectId, skip this field
+          }
+        }
       });
 
-      this.modelQuery = this.modelQuery.find({
-        $or: stringFields.map(
-          (field) =>
-            ({
-              [field]: { $regex: searchTerm, $options: "i" },
-            }) as FilterQuery<T>
-        ),
-      });
+      if (searchConditions.length > 0) {
+        this.modelQuery = this.modelQuery.find({
+          $or: searchConditions,
+        });
+      }
     }
 
     return this;
