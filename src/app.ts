@@ -54,7 +54,11 @@ app.use(
   config.file_path as string,
   express.static(path.join(__dirname, "public"))
 );
-app.use(cors());
+
+app.use(cors({
+  origin: [`${config.FRONTEND_URL}`, "http://localhost:3000"],
+  credentials: true,
+}));
 superAdmin();
 
 cron.schedule("0 0 * * *", async () => {

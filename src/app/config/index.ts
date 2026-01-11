@@ -30,4 +30,5 @@ export default {
   },
   file_path: process.env.FILE_PATH,
   host: process.env.HOST,
+  FRONTEND_URL: process.env.FRONTEND_URL,
 };
