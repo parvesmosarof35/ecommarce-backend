@@ -56,7 +56,11 @@ app.use(
 );
 
 app.use(cors({
-  origin: [`${config.FRONTEND_URL}`, "http://localhost:3000"],
+  origin: [
+    "https://lunel-beauty.vercel.app",
+    "http://localhost:3000",
+    `${config.FRONTEND_URL}`
+  ],
   credentials: true,
 }));
 superAdmin();
