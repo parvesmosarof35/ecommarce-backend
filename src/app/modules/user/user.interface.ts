@@ -8,7 +8,7 @@ export interface UserResponse {
 
 export type TUser = {
   id: string;
-  role: "buyer" | "seller" | "admin" | "superAdmin";
+  role: "buyer" | "seller" | "admin" | "superAdmin" | "guest";
   gender: "Male" | "Female" | "Others";
   fullname: string;
   password: string;
@@ -23,6 +23,7 @@ export type TUser = {
   isStripeConnected?: boolean;
   fcm?: string;
   address?: string;
+  sessionId?: string;
   isDelete: boolean;
 };
 

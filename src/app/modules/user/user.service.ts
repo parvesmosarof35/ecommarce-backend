@@ -567,6 +567,73 @@ const deleteAllTypesOfUserIntoDb = async (id: string) => {
 
 
 
+const createGuestUserIntoDb = async (payload: { sessionId: string }) => {
+  try {
+    // Generate a unique guest user email based on session ID and timestamp
+    const timestamp = Date.now();
+    const guestEmail = `guest_${payload.sessionId}_${timestamp}@guest.local`;
+    
+    // Generate a random password for guest user (won't be used for login)
+    const guestPassword = Math.random().toString(36).substring(2, 15);
+    
+    // Create guest user data
+    const guestUserData = {
+      fullname: "Guest User",
+      email: guestEmail,
+      password: guestPassword,
+      role: USER_ROLE.guest,
+      status: USER_ACCESSIBILITY.isProgress,
+      isVerify: true, // Auto-verify guest users
+      phoneNumber: "",
+      sessionId: payload.sessionId, // Store session ID for tracking
+    };
+
+    // Create the guest user
+    const result = await users.create(guestUserData);
+
+    // Generate JWT token for the guest user
+    const jwtPayload = {
+      id: result._id.toString(),
+      email: result.email,
+      role: result.role,
+    };
+
+    const accessToken = jwtHelpers.generateToken(
+      jwtPayload,
+      config.jwt_access_secret as string,
+      config.expires_in as string
+    );
+
+    const refreshToken = jwtHelpers.generateToken(
+      jwtPayload,
+      config.jwt_refresh_secret as string,
+      config.refresh_expires_in as string
+    );
+
+    return {
+      status: true,
+      message: "Guest user created successfully",
+      data: {
+        user: {
+          _id: result._id,
+          fullname: result.fullname,
+          email: result.email,
+          role: result.role,
+          isVerify: result.isVerify,
+        },
+        accessToken,
+        refreshToken,
+      },
+    };
+  } catch (error) {
+    throw new AppError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      "Failed to create guest user",
+      error instanceof Error ? error.message : String(error)
+    );
+  }
+};
+
 const UserServices = {
   createUserIntoDb,
   userVarificationIntoDb,
@@ -576,6 +643,7 @@ const UserServices = {
   resetPasswordIntoDb,
   getUserGrowthIntoDb,
   recently_joined_user_IntoDb,
-  deleteAllTypesOfUserIntoDb
+  deleteAllTypesOfUserIntoDb,
+  createGuestUserIntoDb
 };
 export default UserServices;

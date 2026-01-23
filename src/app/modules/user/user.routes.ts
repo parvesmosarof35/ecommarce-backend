@@ -52,6 +52,13 @@ router.get("/find_by_user_growth", auth(USER_ROLE.admin, USER_ROLE.superAdmin), 
 router.get("/recently_joined_user", auth(USER_ROLE.admin, USER_ROLE.superAdmin), UserController.recently_joined_user);
 router.delete("/delete_user/:id", auth(USER_ROLE.superAdmin), UserController.deleteAllTypesOfUser);
 
+// Guest user creation - no authentication required
+router.post(
+  "/guest_login",
+  validationRequest(UserValidationSchema.createGuestUserSchema),
+  UserController.createGuestUser
+);
+
 // user Growth
 // Recently Joined Users
 

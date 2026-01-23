@@ -5,7 +5,8 @@ export const USER_ROLE = {
   buyer: "buyer",
   seller: "seller",
   admin: "admin",
-  superAdmin: "superAdmin"
+  superAdmin: "superAdmin",
+  guest: "guest"
 } as const;
 
 export const USER_ACCESSIBILITY = {

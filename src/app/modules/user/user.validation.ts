@@ -110,6 +110,12 @@ const resetPasswordSchema = z.object({
   }),
 });
 
+const createGuestUserSchema = z.object({
+  body: z.object({
+    sessionId: z.string({ message: "sessionId is required" }),
+  }),
+});
+
 const UserValidationSchema = {
   createUserZodSchema,
   UserVerification,
@@ -118,6 +124,7 @@ const UserValidationSchema = {
   ForgotPasswordSchema,
   verificationCodeSchema,
   resetPasswordSchema,
+  createGuestUserSchema,
 };
 
 export default UserValidationSchema;

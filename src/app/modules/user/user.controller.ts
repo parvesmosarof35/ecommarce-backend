@@ -102,6 +102,16 @@ const deleteAllTypesOfUser: RequestHandler = catchAsync(async (req, res) => {
   });
 })
 
+const createGuestUser: RequestHandler = catchAsync(async (req, res) => {
+  const result = await UserServices.createGuestUserIntoDb(req.body);
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Successfully created guest user",
+    data: result,
+  });
+});
+
 const UserController = {
   createUser,
   userVarification,
@@ -111,7 +121,8 @@ const UserController = {
   resetPassword,
   getUserGrowth,
   recently_joined_user,
-  deleteAllTypesOfUser
+  deleteAllTypesOfUser,
+  createGuestUser
 };
 
 export default UserController;

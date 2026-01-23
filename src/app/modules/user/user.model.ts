@@ -46,7 +46,7 @@ const TUserSchema = new Schema<TUser, UserModel>(
     role: {
       type: String,
       enum: {
-        values: [USER_ROLE.buyer, USER_ROLE.seller, USER_ROLE.admin],
+        values: [USER_ROLE.buyer, USER_ROLE.seller, USER_ROLE.admin, USER_ROLE.guest],
         message: "{VALUE} is Not Required",
       },
       required: [true, "Role is Required"],
@@ -88,6 +88,11 @@ const TUserSchema = new Schema<TUser, UserModel>(
     fcm: {
       type: String,
       required: [false, "fcm is not  required"],
+      default: null,
+    },
+    sessionId: {
+      type: String,
+      required: [false, "sessionId is not required"],
       default: null,
     },
     isDelete: {
