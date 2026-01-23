@@ -1,5 +1,6 @@
 import cors from "cors";
 import express from "express";
+import rateLimit from "express-rate-limit";
 
 import bodyParser from "body-parser";
 // import cron from "node-cron";
@@ -26,6 +27,15 @@ declare global {
 }
 
 const app = express();
+
+// Set up rate limiter for all API routes
+const limiter = rateLimit({
+  windowMs: 5 * 60 * 1000,  // 5 minutes
+  max: 100,  // Limit each IP to 100 requests per `windowMs` 
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 app.use(cookieParser());
 
@@ -98,6 +108,9 @@ app.get("/", (_req, res) => {
     message: "Welcome to ecommerce of raphm18 ",
   });
 });
+
+// Apply rate limiter to all API routes
+app.use("/api/v1", limiter);
 
 app.use("/api/v1", router);
 
