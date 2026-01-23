@@ -9,9 +9,9 @@ const router = Router();
 // router.post('/guest', OrderController.createGuestOrder);
 
 // Protected routes (require authentication)
-router.post('/create', auth(USER_ROLE.buyer, USER_ROLE.seller, USER_ROLE.admin, USER_ROLE.superAdmin), OrderController.createOrder);
-router.get('/my-orders/:customerId', auth(USER_ROLE.buyer, USER_ROLE.seller, USER_ROLE.admin, USER_ROLE.superAdmin), OrderController.getOrdersByCustomerId);
-router.get('/:orderId', auth(USER_ROLE.buyer, USER_ROLE.seller, USER_ROLE.admin, USER_ROLE.superAdmin), OrderController.getOrderById);
+router.post('/create', auth(USER_ROLE.buyer, USER_ROLE.seller, USER_ROLE.admin, USER_ROLE.superAdmin, USER_ROLE.guest), OrderController.createOrder);
+router.get('/my-orders/:customerId', auth(USER_ROLE.buyer, USER_ROLE.seller, USER_ROLE.admin, USER_ROLE.superAdmin, USER_ROLE.guest), OrderController.getOrdersByCustomerId);
+router.get('/:orderId', auth(USER_ROLE.buyer, USER_ROLE.seller, USER_ROLE.admin, USER_ROLE.superAdmin, USER_ROLE.guest), OrderController.getOrderById);
 
 // Admin routes (require admin authentication)
 router.get('/', auth(USER_ROLE.admin, USER_ROLE.superAdmin), OrderController.getAllOrders);

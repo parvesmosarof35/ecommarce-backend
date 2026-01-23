@@ -9,6 +9,7 @@ const router = Router();
 router.post(
   "/cart/create-checkout-session",
   auth(
+    USER_ROLE.guest,
     USER_ROLE.buyer,
     USER_ROLE.seller,
     USER_ROLE.admin,
@@ -21,6 +22,7 @@ router.post(
 router.post(
   "/direct-payment",
   auth(
+    USER_ROLE.guest,
     USER_ROLE.buyer,
     USER_ROLE.seller,
     USER_ROLE.admin,
@@ -33,6 +35,7 @@ router.post(
 router.post(
   "/confirm-payment",
   auth(
+    USER_ROLE.guest,
     USER_ROLE.buyer,
     USER_ROLE.seller,
     USER_ROLE.admin,
@@ -43,6 +46,7 @@ router.post(
 router.post(
   "/refund",
   auth(
+    USER_ROLE.guest,
     USER_ROLE.buyer,
     USER_ROLE.seller,
     USER_ROLE.admin,

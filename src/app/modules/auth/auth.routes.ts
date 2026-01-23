@@ -24,14 +24,14 @@ router.post(
 
 router.get(
   "/myprofile",
-  auth(USER_ROLE.admin, USER_ROLE.buyer, USER_ROLE.admin,  USER_ROLE.superAdmin),
+  auth(USER_ROLE.admin, USER_ROLE.buyer, USER_ROLE.admin, USER_ROLE.superAdmin, USER_ROLE.guest),
   AuthController.myprofile
 );
 
 // Routes file
 router.patch(
   "/update_my_profile",
-  auth(USER_ROLE.buyer, USER_ROLE.seller, USER_ROLE.admin, USER_ROLE.superAdmin),
+  auth(USER_ROLE.buyer, USER_ROLE.seller, USER_ROLE.admin, USER_ROLE.superAdmin, USER_ROLE.guest),
   upload.single("file"),
   (req: Request, res: Response, next: NextFunction) => {
     try {
