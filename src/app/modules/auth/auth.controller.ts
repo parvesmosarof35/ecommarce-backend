@@ -116,7 +116,25 @@ const getSingleUserById: RequestHandler = catchAsync(async (req, res) => {
     message: "Successfully Find Single User",
     data: result,
   });
-})
+});
+
+const googleLogin: RequestHandler = catchAsync(async (req, res) => {
+  const result = await AuthServices.googleLoginIntoDb(req.body);
+
+  const { refreshToken, accessToken } = result;
+  res.cookie("refreshToken", refreshToken, {
+    secure: config.NODE_ENV === "production",
+    httpOnly: true,
+  });
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Successfully Login with Google",
+    data: {
+      accessToken,
+    },
+  });
+});
 
 const AuthController = {
   loginUser,
@@ -127,7 +145,8 @@ const AuthController = {
   deleteAccount,
   isBlockAccount,
   find_by_all_admin,
-  getSingleUserById
+  getSingleUserById,
+  googleLogin,
 };
 
 export default AuthController;
