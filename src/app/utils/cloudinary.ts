@@ -136,6 +136,61 @@ export const uploadImageToCloudinary = async (
   };
 };
 
+export const uploadBufferToCloudinary = async (
+  buffer: Buffer,
+  folder: string,
+  optimizationLevel: OptimizationLevel = "medium",
+  filename?: string
+): Promise<CloudinaryUploadResult> => {
+  if (
+    !config.Cloudinary?.CLOUDINARY_CLOUD_NAME ||
+    !config.Cloudinary?.CLOUDINARY_API_KEY ||
+    !config.Cloudinary?.CLOUDINARY_API_SECRET
+  ) {
+    throw new Error("Cloudinary credentials are not configured");
+  }
+
+  // Get optimization settings based on buffer size and level
+  const fileSize = buffer.length;
+  const optimizationSettings = getOptimizationSettings(
+    optimizationLevel,
+    fileSize
+  );
+
+  // Log file size for monitoring
+  console.log(
+    `Uploading image from buffer, Size: ${(fileSize / 1024 / 1024).toFixed(2)}MB`
+  );
+
+  // Since upload_stream doesn't return a promise, we need to wrap it
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder,
+        resource_type: "image",
+        public_id: filename,
+        transformation: [optimizationSettings],
+      },
+      (error, result) => {
+        if (error) {
+          reject(error);
+        } else if (result) {
+          console.log(
+            `Image optimized and uploaded: ${result.secure_url}, Original size: ${(fileSize / 1024 / 1024).toFixed(2)}MB`
+          );
+          resolve({
+            secure_url: result.secure_url,
+            public_id: result.public_id,
+          });
+        } else {
+          reject(new Error("Upload failed: No result returned"));
+        }
+      }
+    );
+    stream.end(buffer);
+  });
+};
+
 export const deleteFromCloudinary = async (publicId: string) => {
   if (!publicId) return;
 

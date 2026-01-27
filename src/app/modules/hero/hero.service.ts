@@ -4,9 +4,7 @@ import HeroSection from "./hero.model";
 import { THeroSection } from "./hero.interface";
 import {
   deleteFromCloudinary,
-  uploadImageToCloudinary,
 } from "../../utils/cloudinary";
-import fs from "fs";
 
 const getHeroSectionFromDb = async () => {
   try {
@@ -44,8 +42,9 @@ const updateHeroSectionIntoDb = async (req: any) => {
   try {
     const file = req.file;
     const data = req.body.data || {};
+    const cloudinaryUrl = req.body.cloudinaryUrl;
 
-    // Find the first hero section or create a new one
+    // Find the first hero section
     let heroSection = await HeroSection.findOne();
     
     if (!heroSection) {
@@ -63,24 +62,11 @@ const updateHeroSectionIntoDb = async (req: any) => {
     if (data.secondaryButtonText) updateData.secondaryButtonText = data.secondaryButtonText;
     if (data.secondaryButtonLink) updateData.secondaryButtonLink = data.secondaryButtonLink;
 
-    // Handle file upload
-    if (file) {
-      const filePath = file.path.replace(/\\/g, "/");
+    // Handle Cloudinary URL (uploaded directly to Cloudinary)
+    if (cloudinaryUrl) {
       const existingHero = await HeroSection.findOne().select("backgroundImage");
       
-      // Upload new image to Cloudinary
-      const uploaded = await uploadImageToCloudinary(
-        filePath,
-        "hero-sections",
-        "high"
-      );
-
-      updateData.backgroundImage = uploaded.secure_url;
-
-      // Clean up temp file
-      try {
-        fs.unlinkSync(file.path);
-      } catch {}
+      updateData.backgroundImage = cloudinaryUrl;
 
       // Delete old image from Cloudinary if it exists and is not the default
       if (existingHero?.backgroundImage && 

@@ -4,7 +4,7 @@ import HeroSectionController from "./hero.controller";
 import HeroSectionValidationSchema from "./hero.validation";
 import auth from "../../middlewares/auth";
 import validationRequest from "../../middlewares/validationRequest";
-import upload from "../../utils/uploadFile";
+import upload, { uploadToCloudinary } from "../../utils/cloudinaryUpload";
 
 const heroRouter = express.Router();
 
@@ -14,11 +14,12 @@ heroRouter.get(
   HeroSectionController.getHeroSection
 );
 
-// Update hero section (admin only) - single record system with file upload
+// Update hero section (admin only) - single record system with direct Cloudinary upload
 heroRouter.patch(
   "/update-hero-section",
   auth(USER_ROLE.admin, USER_ROLE.superAdmin),
   upload.single("file"),
+  uploadToCloudinary,
   (req, res, next) => {
     try {
       if (req.body.data && typeof req.body.data === "string") {
