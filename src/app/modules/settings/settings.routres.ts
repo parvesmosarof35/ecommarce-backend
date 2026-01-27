@@ -16,6 +16,14 @@ routes.post(
   SettingController.updateAboutUs,
 );
 
+
+routes.patch(
+  '/about',
+  auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+  validationRequest(settingValidationSchema.AboutValidationSchema),
+  SettingController.updateAboutUs,
+);
+
 routes.get('/find_by_about_us', SettingController.findByAboutUs);
 
 routes.post(
