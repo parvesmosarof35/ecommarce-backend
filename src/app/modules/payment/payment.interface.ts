@@ -17,7 +17,18 @@ export interface PaymentResponse {
     refundId?: string;
     orderId?: string;
     status?: string;
+    paymentMethods?: PaymentMethod[];
+    defaultMethod?: string;
   };
+}
+
+export interface PaymentMethod {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  enabled: boolean;
+  popular?: boolean;
 }
 
 export interface WebhookEvent {

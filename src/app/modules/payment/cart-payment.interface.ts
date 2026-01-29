@@ -23,6 +23,7 @@ export interface CartPaymentResponse {
     paymentIntentId?: string;
     sessionId?: string;
     paymentUrl?: string;
+    paymentMethodType?: string;
   };
 }
 

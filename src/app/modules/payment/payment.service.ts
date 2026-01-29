@@ -28,12 +28,14 @@ class PaymentService {
 
   async createCartCheckoutSession(
     paymentRequest: CartPaymentRequest,
-    userId: string
+    userId: string,
+    paymentMethodType: string = 'card'
   ): Promise<CartPaymentResponse> {
     try {
       console.log('=== PAYMENT SERVICE CREATE CART CHECKOUT ===');
       console.log('Payment request:', paymentRequest);
       console.log('User ID:', userId);
+      console.log('Payment method type:', paymentMethodType);
       
       // Get user's cart items from database
       const cartResult = await CartServices.getCartByUser(userId, {});
@@ -100,8 +102,107 @@ class PaymentService {
       console.log('Compressed metadata:', compressedMetadata);
       console.log('Compressed metadata field sizes:', Object.entries(compressedMetadata).map(([key, value]) => ({ key, length: value.length })));
 
+      // Determine payment method types based on payment method type
+      let paymentMethodTypes: string[];
+      let paymentMethodName: string;
+
+      switch (paymentMethodType) {
+        case 'multiple':
+          // Include multiple popular payment methods for user to choose from
+          paymentMethodTypes = [
+            'card',
+            'klarna',
+            'afterpay_clearpay',
+            'sepa_debit',
+            'ideal'
+          ];
+          paymentMethodName = 'Multiple Payment Options';
+          break;
+        case 'google_pay':
+          paymentMethodTypes = ['card']; // Google Pay uses card infrastructure
+          paymentMethodName = 'Google Pay';
+          break;
+        case 'apple_pay':
+          paymentMethodTypes = ['card']; // Apple Pay uses card infrastructure
+          paymentMethodName = 'Apple Pay';
+          break;
+        case 'paypal':
+          paymentMethodTypes = ['paypal'];
+          paymentMethodName = 'PayPal';
+          break;
+        case 'klarna':
+          paymentMethodTypes = ['klarna'];
+          paymentMethodName = 'Klarna';
+          break;
+        case 'afterpay_clearpay':
+          paymentMethodTypes = ['afterpay_clearpay'];
+          paymentMethodName = 'Afterpay/Clearpay';
+          break;
+        case 'sepa_debit':
+          paymentMethodTypes = ['sepa_debit'];
+          paymentMethodName = 'SEPA Direct Debit';
+          break;
+        case 'ideal':
+          paymentMethodTypes = ['ideal'];
+          paymentMethodName = 'iDEAL';
+          break;
+        case 'sofort':
+          paymentMethodTypes = ['sofort'];
+          paymentMethodName = 'Sofort';
+          break;
+        case 'giropay':
+          paymentMethodTypes = ['giropay'];
+          paymentMethodName = 'Giropay';
+          break;
+        case 'bancontact':
+          paymentMethodTypes = ['bancontact'];
+          paymentMethodName = 'Bancontact';
+          break;
+        case 'eps':
+          paymentMethodTypes = ['eps'];
+          paymentMethodName = 'EPS';
+          break;
+        case 'multibanco':
+          paymentMethodTypes = ['multibanco'];
+          paymentMethodName = 'Multibanco';
+          break;
+        case 'przelewy24':
+          paymentMethodTypes = ['p24'];
+          paymentMethodName = 'Przelewy24';
+          break;
+        case 'wechat_pay':
+          paymentMethodTypes = ['wechat_pay'];
+          paymentMethodName = 'WeChat Pay';
+          break;
+        case 'alipay':
+          paymentMethodTypes = ['alipay'];
+          paymentMethodName = 'Alipay';
+          break;
+        case 'crypto':
+          paymentMethodTypes = ['crypto'];
+          paymentMethodName = 'Cryptocurrency';
+          break;
+        case 'cashapp':
+          paymentMethodTypes = ['cashapp'];
+          paymentMethodName = 'Cash App Pay';
+          break;
+        case 'amazon_pay':
+          paymentMethodTypes = ['amazon_pay'];
+          paymentMethodName = 'Amazon Pay';
+          break;
+        case 'revolut_pay':
+          paymentMethodTypes = ['revolut_pay'];
+          paymentMethodName = 'Revolut Pay';
+          break;
+        case 'card':
+        default:
+          paymentMethodTypes = ['card'];
+          paymentMethodName = 'Credit/Debit Card';
+          break;
+      }
+
       const sessionParams: any = {
-        payment_method_types: ["card"],
+        payment_method_types: paymentMethodTypes,
         line_items: cartItems.map((item) => ({
           price_data: {
             currency: paymentRequest.currency || "usd",
@@ -119,9 +220,11 @@ class PaymentService {
         metadata: {
           type: "cart_payment",
           customerId: userId,
+          paymentMethodType,
           ...compressedMetadata,
         },
       };
+
       console.log('Stripe session params:', sessionParams);
       console.log('Final metadata field sizes:', Object.entries(sessionParams.metadata).map(([key, value]) => ({ key, length: (value as string).length })));
 
@@ -130,10 +233,11 @@ class PaymentService {
 
       return {
         status: true,
-        message: "Cart checkout session created successfully",
+        message: `Cart checkout session created successfully for ${paymentMethodName}`,
         data: {
           sessionId: session.id,
           paymentUrl: session.url || undefined,
+          paymentMethodType,
         },
       };
     } catch (error: any) {
@@ -145,6 +249,193 @@ class PaymentService {
       return {
         status: false,
         message: error.message || "Failed to create cart checkout session",
+      };
+    }
+  }
+
+  async getAvailablePaymentMethods(): Promise<PaymentResponse> {
+    try {
+      console.log('=== GET AVAILABLE PAYMENT METHODS ===');
+      
+      // Define available payment methods based on Stripe configuration
+      const availableMethods = [
+        {
+          id: 'multiple',
+          name: 'Choose Payment Method',
+          description: 'Select from multiple payment options at checkout',
+          icon: 'payment-options',
+          enabled: true,
+          popular: true,
+        },
+        {
+          id: 'card',
+          name: 'Credit/Debit Card',
+          description: 'Pay with Visa, Mastercard, or other credit/debit cards',
+          icon: 'credit-card',
+          enabled: true,
+          popular: false,
+        },
+        {
+          id: 'google_pay',
+          name: 'Google Pay',
+          description: 'Pay with Google Pay for a faster checkout',
+          icon: 'google-pay',
+          enabled: true,
+          popular: false,
+        },
+        {
+          id: 'apple_pay',
+          name: 'Apple Pay',
+          description: 'Pay with Apple Pay for a secure checkout',
+          icon: 'apple-pay',
+          enabled: true,
+          popular: false,
+        },
+        {
+          id: 'klarna',
+          name: 'Klarna',
+          description: 'Buy now, pay later with Klarna',
+          icon: 'klarna',
+          enabled: true,
+          popular: false,
+        },
+        {
+          id: 'afterpay_clearpay',
+          name: 'Afterpay/Clearpay',
+          description: 'Buy now, pay later in installments',
+          icon: 'afterpay',
+          enabled: true,
+          popular: false,
+        },
+        {
+          id: 'sepa_debit',
+          name: 'SEPA Direct Debit',
+          description: 'Direct bank transfer from European accounts',
+          icon: 'sepa',
+          enabled: true,
+          popular: false,
+        },
+        {
+          id: 'ideal',
+          name: 'iDEAL',
+          description: 'Direct bank transfer from Dutch accounts',
+          icon: 'ideal',
+          enabled: true,
+          popular: false,
+        },
+        {
+          id: 'sofort',
+          name: 'Sofort',
+          description: 'Direct bank transfer from German/Austrian accounts',
+          icon: 'sofort',
+          enabled: true,
+          popular: false,
+        },
+        {
+          id: 'giropay',
+          name: 'Giropay',
+          description: 'Direct bank transfer from German accounts',
+          icon: 'giropay',
+          enabled: true,
+          popular: false,
+        },
+        {
+          id: 'bancontact',
+          name: 'Bancontact',
+          description: 'Popular payment method in Belgium',
+          icon: 'bancontact',
+          enabled: true,
+          popular: false,
+        },
+        {
+          id: 'eps',
+          name: 'EPS',
+          description: 'Online banking payment in Austria',
+          icon: 'eps',
+          enabled: true,
+          popular: false,
+        },
+        {
+          id: 'multibanco',
+          name: 'Multibanco',
+          description: 'Popular payment method in Portugal',
+          icon: 'multibanco',
+          enabled: true,
+          popular: false,
+        },
+        {
+          id: 'przelewy24',
+          name: 'Przelewy24',
+          description: 'Online banking payment in Poland',
+          icon: 'p24',
+          enabled: true,
+          popular: false,
+        },
+        {
+          id: 'wechat_pay',
+          name: 'WeChat Pay',
+          description: 'Popular payment method in China',
+          icon: 'wechat-pay',
+          enabled: true,
+          popular: false,
+        },
+        {
+          id: 'alipay',
+          name: 'Alipay',
+          description: 'Popular payment method in China',
+          icon: 'alipay',
+          enabled: true,
+          popular: false,
+        },
+        {
+          id: 'crypto',
+          name: 'Cryptocurrency',
+          description: 'Pay with various cryptocurrencies',
+          icon: 'crypto',
+          enabled: true,
+          popular: false,
+        },
+        {
+          id: 'cashapp',
+          name: 'Cash App Pay',
+          description: 'Pay with Cash App',
+          icon: 'cashapp',
+          enabled: true,
+          popular: false,
+        },
+        {
+          id: 'amazon_pay',
+          name: 'Amazon Pay',
+          description: 'Pay using your Amazon account',
+          icon: 'amazon-pay',
+          enabled: true,
+          popular: false,
+        },
+        {
+          id: 'revolut_pay',
+          name: 'Revolut Pay',
+          description: 'Pay with Revolut',
+          icon: 'revolut',
+          enabled: true,
+          popular: false,
+        },
+      ];
+
+      return {
+        status: true,
+        message: "Available payment methods retrieved successfully",
+        data: {
+          paymentMethods: availableMethods,
+          defaultMethod: 'multiple',
+        },
+      };
+    } catch (error: any) {
+      console.log('=== GET PAYMENT METHODS ERROR ===');
+      console.log('Error:', error);
+      
+      return {
+        status: false,
+        message: error.message || "Failed to retrieve available payment methods",
       };
     }
   }
