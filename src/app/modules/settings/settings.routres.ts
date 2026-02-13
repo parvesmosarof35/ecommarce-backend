@@ -48,7 +48,7 @@ routes.get(
   SettingController.findByTermsConditions,
 );
 
-// /api/v1/settings/socal_media_links_address_phone_email_texts
+// /api/v1/setting/socal_media_links_address_phone_email_texts
 
 routes.post(
   '/socal_media_links_address_phone_email_texts',
