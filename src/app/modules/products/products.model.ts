@@ -36,6 +36,10 @@ const ProductSchema = new Schema<IProduct, ProductModel>(
       trim: true,
       uppercase: true,
     },
+    product_link: {
+      type: String,
+      trim: true,
+    },
     isFeatured: {
       type: Boolean,
       default: false,

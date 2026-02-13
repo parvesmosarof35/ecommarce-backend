@@ -27,6 +27,7 @@ export interface IProduct extends Document {
   price: number;
   stock_quantity: number;
   sku: string; // Stock Keeping Unit
+  product_link?: string; // Product link
   isFeatured?: boolean; // Featured product flag
   images_urls: string[];
   imagesPublicIds?: string[];

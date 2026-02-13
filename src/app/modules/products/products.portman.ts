@@ -22,7 +22,9 @@
 //   "isFeatured": true,
 //   "categories": ["Serums", "Vitamin C", "Anti-aging"],
 //   "skintype": "Normal",
+//   "skintype": "Normal",
 //   "ingredients": ["Vitamin C", "Hyaluronic Acid"],
+//   "product_link": "https://example.com/product",
 //   "collections": ["COLLECTION_ID_HERE"]
 // }
 // ```
@@ -185,7 +187,9 @@
 //   "isFeatured": false,
 //   "categories": ["Serums", "Updated Category"],
 //   "skintype": "Oily",
-//   "ingredients": ["Vitamin C", "Niacinamide"]
+//   "skintype": "Oily",
+//   "ingredients": ["Vitamin C", "Niacinamide"],
+//   "product_link": "https://example.com/updated-product"
 // }
 // ```
 

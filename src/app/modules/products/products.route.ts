@@ -32,6 +32,11 @@ router.post(
           req.body.isFeatured === "true" || req.body.isFeatured === "1";
       }
 
+      // product_link handling
+      if (req.body.product_link && typeof req.body.product_link === "string") {
+        req.body.product_link = req.body.product_link.trim();
+      }
+
       // Handle optional array fields from form data
       if (req.body.categories && typeof req.body.categories === "string") {
         req.body.categories = req.body.categories
@@ -95,6 +100,11 @@ router.put(
       if (req.body.isFeatured && typeof req.body.isFeatured === "string") {
         req.body.isFeatured =
           req.body.isFeatured === "true" || req.body.isFeatured === "1";
+      }
+
+      // product_link handling
+      if (req.body.product_link && typeof req.body.product_link === "string") {
+        req.body.product_link = req.body.product_link.trim();
       }
 
       // Handle optional array fields from form data
