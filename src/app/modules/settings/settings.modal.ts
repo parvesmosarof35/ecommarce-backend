@@ -6,7 +6,10 @@ import {
   TermsConditionsModel,
   TPrivacyPolicy,
   TTermsConditions,
+  TSocialMediaLinksAddressPhoneEmailTexts,
+  SocialMediaLinksAddressPhoneEmailTextsModel,
 } from './settings.interface';
+
 
 const AboutUsSchema = new Schema<TAboutUs, AboutModel>(
   {
@@ -55,7 +58,76 @@ const TermsConditionSchema = new Schema<TTermsConditions, TermsConditionsModel>(
   },
 );
 
+const SocialMediaLinksAddressPhoneEmailTextsSchema = new Schema<
+  TSocialMediaLinksAddressPhoneEmailTexts,
+  SocialMediaLinksAddressPhoneEmailTextsModel
+>(
+  {
+    instagram: {
+      url: { type: String, default: '' },
+      isActive: { type: Boolean, default: true },
+    },
+    facebook: {
+      url: { type: String, default: '' },
+      isActive: { type: Boolean, default: true },
+    },
+    tiktok: {
+      url: { type: String, default: '' },
+      isActive: { type: Boolean, default: false },
+    },
+    twitterx: {
+      url: { type: String, default: '' },
+      isActive: { type: Boolean, default: true },
+    },
+    whatsapp: {
+      url: { type: String, default: '' },
+      isActive: { type: Boolean, default: true },
+    },
+    address: {
+      url: { type: String, default: '' },
+      isActive: { type: Boolean, default: true },
+    },
+    phone: {
+      url: { type: String, default: '' },
+      isActive: { type: Boolean, default: true },
+    },
+    email: {
+      url: { type: String, default: '' },
+      isActive: { type: Boolean, default: true },
+    },
+    homepagesection2: {
+      title: { type: String, default: '' },
+      subtitle: { type: String, default: '' },
+    },
+    homepagesection3: {
+      title: { type: String, default: '' },
+      subtitle: { type: String, default: '' },
+      buttontext: { type: String, default: '' },
+    },
+    footertext: {
+      logobelowtext: { type: String, default: '' },
+      footerbottomtext: { type: String, default: '' },
+    },
+    productpage: {
+      title: { type: String, default: '' },
+      subtitle: { type: String, default: '' },
+    },
+    productdetails: {
+      Gotodetailstext: { type: String, default: '' },
+      relatedproducttext: { type: String, default: '' },
+    },
+    isDelete: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
+
 AboutUsSchema.statics.isAboutCustomId = async function (id: string) {
+
   return this.findById(id);
 };
 PrivacyPolicySchema.statics.isPrivacyPolicyCustomId = async function (
@@ -69,6 +141,12 @@ TermsConditionSchema.statics.isTermsConditionsCustomId = async function (
 ) {
   return this.findById(id);
 };
+
+SocialMediaLinksAddressPhoneEmailTextsSchema.statics.isSocialMediaLinksAddressPhoneEmailTextsCustomId =
+  async function (id: string) {
+    return this.findById(id);
+  };
+
 
 AboutUsSchema.pre('find', function (next) {
   this.find({ isDelete: { $ne: true } });
@@ -109,6 +187,20 @@ TermsConditionSchema.pre('aggregate', function (next) {
   next();
 });
 
+SocialMediaLinksAddressPhoneEmailTextsSchema.pre('find', function (next) {
+  this.find({ isDelete: { $ne: true } });
+  next();
+});
+SocialMediaLinksAddressPhoneEmailTextsSchema.pre('findOne', function (next) {
+  this.findOne({ isDelete: { $ne: true } });
+  next();
+});
+SocialMediaLinksAddressPhoneEmailTextsSchema.pre('aggregate', function (next) {
+  this.pipeline().unshift({ $match: { isDelete: { $ne: true } } });
+  next();
+});
+
+
 export const aboutus = model<TAboutUs, AboutModel>('aboutus', AboutUsSchema);
 export const privacypolicys = model<TPrivacyPolicy, PrivacyPolicyModel>(
   'privacypolicys',
@@ -118,4 +210,12 @@ export const privacypolicys = model<TPrivacyPolicy, PrivacyPolicyModel>(
 export const termsConditions = model<TTermsConditions, TermsConditionsModel>(
   ' termsConditions',
   TermsConditionSchema,
+);
+
+export const socialMediaLinksAddressPhoneEmailTexts = model<
+  TSocialMediaLinksAddressPhoneEmailTexts,
+  SocialMediaLinksAddressPhoneEmailTextsModel
+>(
+  'socialMediaLinksAddressPhoneEmailTexts',
+  SocialMediaLinksAddressPhoneEmailTextsSchema,
 );

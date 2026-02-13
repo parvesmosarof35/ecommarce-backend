@@ -29,3 +29,68 @@ export interface TermsConditionsModel extends Model<TTermsConditions> {
   // eslint-disable-next-line no-unused-vars
   isTermsConditionsCustomId(id: string): Promise<TTermsConditions>;
 }
+
+export interface TSocialMediaLinksAddressPhoneEmailTexts {
+  instagram: {
+    url: string;
+    isActive: boolean;
+  };
+  facebook: {
+    url: string;
+    isActive: boolean;
+  };
+  tiktok: {
+    url: string;
+    isActive: boolean;
+  };
+  twitterx: {
+    url: string;
+    isActive: boolean;
+  };
+  whatsapp: {
+    url: string;
+    isActive: boolean;
+  };
+  address: {
+    url: string;
+    isActive: boolean;
+  };
+  phone: {
+    url: string;
+    isActive: boolean;
+  };
+  email: {
+    url: string;
+    isActive: boolean;
+  };
+  homepagesection2: {
+    title: string;
+    subtitle: string;
+  };
+  homepagesection3: {
+    title: string;
+    subtitle: string;
+    buttontext: string;
+  };
+  footertext: {
+    logobelowtext: string;
+    footerbottomtext: string;
+  };
+  productpage: {
+    title: string;
+    subtitle: string;
+  };
+  productdetails: {
+    Gotodetailstext: string;
+    relatedproducttext: string;
+  };
+  isDelete: boolean;
+}
+
+export interface SocialMediaLinksAddressPhoneEmailTextsModel
+  extends Model<TSocialMediaLinksAddressPhoneEmailTexts> {
+  // eslint-disable-next-line no-unused-vars
+  isSocialMediaLinksAddressPhoneEmailTextsCustomId(
+    id: string,
+  ): Promise<TSocialMediaLinksAddressPhoneEmailTexts>;
+}

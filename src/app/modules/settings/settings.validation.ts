@@ -20,10 +20,96 @@ const TermsConditionsValidationSchema = z.object({
   }),
 });
 
+const SocalMediaLinksAddressPhoneEmailTextsValidationSchema = z.object({
+  body: z.object({
+    instagram: z
+      .object({
+        url: z.string().optional(),
+        isActive: z.boolean().optional(),
+      })
+      .optional(),
+    facebook: z
+      .object({
+        url: z.string().optional(),
+        isActive: z.boolean().optional(),
+      })
+      .optional(),
+    tiktok: z
+      .object({
+        url: z.string().optional(),
+        isActive: z.boolean().optional(),
+      })
+      .optional(),
+    twitterx: z
+      .object({
+        url: z.string().optional(),
+        isActive: z.boolean().optional(),
+      })
+      .optional(),
+    whatsapp: z
+      .object({
+        url: z.string().optional(),
+        isActive: z.boolean().optional(),
+      })
+      .optional(),
+    address: z
+      .object({
+        url: z.string().optional(),
+        isActive: z.boolean().optional(),
+      })
+      .optional(),
+    phone: z
+      .object({
+        url: z.string().optional(),
+        isActive: z.boolean().optional(),
+      })
+      .optional(),
+    email: z
+      .object({
+        url: z.string().optional(),
+        isActive: z.boolean().optional(),
+      })
+      .optional(),
+    homepagesection2: z
+      .object({
+        title: z.string().optional(),
+        subtitle: z.string().optional(),
+      })
+      .optional(),
+    homepagesection3: z
+      .object({
+        title: z.string().optional(),
+        subtitle: z.string().optional(),
+        buttontext: z.string().optional(),
+      })
+      .optional(),
+    footertext: z
+      .object({
+        logobelowtext: z.string().optional(),
+        footerbottomtext: z.string().optional(),
+      })
+      .optional(),
+    productpage: z
+      .object({
+        title: z.string().optional(),
+        subtitle: z.string().optional(),
+      })
+      .optional(),
+    productdetails: z
+      .object({
+        Gotodetailstext: z.string().optional(),
+        relatedproducttext: z.string().optional(),
+      })
+      .optional(),
+  }),
+});
+
 const settingValidationSchema = {
   AboutValidationSchema,
   PrivacyPolicysValidationSchema,
   TermsConditionsValidationSchema,
+  SocalMediaLinksAddressPhoneEmailTextsValidationSchema,
 };
+
 
 export default settingValidationSchema;

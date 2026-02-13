@@ -66,6 +66,36 @@ const findByTermsConditions: RequestHandler = catchAsync(async (req, res) => {
   });
 });
 
+
+const socalMediaLinksAddressPhoneEmailTexts: RequestHandler = catchAsync(
+  async (req, res) => {
+    const result =
+      await SettingServices.socalMediaLinksAddressPhoneEmailTextsIntoDb(
+        req.body,
+      );
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: 'Successfully Updated Social Media Links and Texts',
+      data: result,
+    });
+  },
+);
+
+const findBySocalMediaLinksAddressPhoneEmailTexts: RequestHandler = catchAsync(
+  async (req, res) => {
+    const result =
+      await SettingServices.findBySocalMediaLinksAddressPhoneEmailTextsIntoDb();
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: 'Successfully Found Social Media Links and Texts',
+      data: result,
+    });
+  },
+);
+
+
 const SettingController = {
   updateAboutUs,
   findByAboutUs,
@@ -73,6 +103,11 @@ const SettingController = {
   findByPrivacyPolicyss,
   termsConditions,
   findByTermsConditions,
+  socalMediaLinksAddressPhoneEmailTexts,
+
+  findBySocalMediaLinksAddressPhoneEmailTexts,
 };
+
+
 
 export default SettingController;

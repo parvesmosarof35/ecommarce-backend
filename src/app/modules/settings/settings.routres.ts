@@ -48,6 +48,23 @@ routes.get(
   SettingController.findByTermsConditions,
 );
 
+// /api/v1/settings/socal_media_links_address_phone_email_texts
+
+routes.post(
+  '/socal_media_links_address_phone_email_texts',
+  auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+  validationRequest(
+    settingValidationSchema.SocalMediaLinksAddressPhoneEmailTextsValidationSchema,
+  ),
+  SettingController.socalMediaLinksAddressPhoneEmailTexts,
+);
+
+routes.get(
+  '/find_by_socal_media_links_address_phone_email_texts',
+  SettingController.findBySocalMediaLinksAddressPhoneEmailTexts,
+);
+
+
 const SettingsRoutes = routes;
 
 export default SettingsRoutes;

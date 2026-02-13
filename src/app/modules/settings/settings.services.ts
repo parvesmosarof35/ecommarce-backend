@@ -1,6 +1,16 @@
-import { aboutus, privacypolicys, termsConditions } from './settings.modal';
+import {
+  aboutus,
+  privacypolicys,
+  termsConditions,
+  socialMediaLinksAddressPhoneEmailTexts,
+} from './settings.modal';
 import httpStatus from 'http-status';
-import { TAboutUs, TPrivacyPolicy, TTermsConditions } from './settings.interface';
+import {
+  TAboutUs,
+  TPrivacyPolicy,
+  TTermsConditions,
+  TSocialMediaLinksAddressPhoneEmailTexts,
+} from './settings.interface';
 import AppError from '../../errors/AppError';
 
 
@@ -137,13 +147,58 @@ const findBytermsConditionsIntoDb = async () => {
   }
 };
 
+
+
+const socalMediaLinksAddressPhoneEmailTextsIntoDb = async (
+  payload: TSocialMediaLinksAddressPhoneEmailTexts,
+) => {
+  try {
+    const result = await socialMediaLinksAddressPhoneEmailTexts.findOneAndUpdate(
+      {},
+      payload,
+      { new: true, upsert: true, setDefaultsOnInsert: true },
+    );
+
+    return result
+      ? { status: true, message: 'Settings successfully saved' }
+      : { status: false, message: 'Failed to save Settings' };
+  } catch (error: any) {
+    throw new AppError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      'Failed to save Settings into DB',
+      error,
+    );
+  }
+};
+
+const findBySocalMediaLinksAddressPhoneEmailTextsIntoDb = async () => {
+  try {
+    const result = await socialMediaLinksAddressPhoneEmailTexts
+      .findOne()
+      .select('-isDelete -createdAt -updatedAt');
+
+    return result;
+  } catch (error: any) {
+    throw new AppError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      'Failed to find settings in db',
+      error,
+    );
+  }
+};
+
+
 const SettingServices = {
   updateAboutUsIntoDb,
   findByAboutUsIntoDb,
   privacyPolicysIntoDb,
   findByPrivacyPolicyssIntoDb,
   termsConditionsIntoDb,
-  findBytermsConditionsIntoDb
+  findBytermsConditionsIntoDb,
+  socalMediaLinksAddressPhoneEmailTextsIntoDb,
+  findBySocalMediaLinksAddressPhoneEmailTextsIntoDb,
 };
+
+
 
 export default SettingServices;
