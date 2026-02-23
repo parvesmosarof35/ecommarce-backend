@@ -56,7 +56,7 @@ const findByAboutUsIntoDb = async () => {
   }
 };
 
-const  privacyPolicysIntoDb= async (payload: TPrivacyPolicy) => {
+const privacyPolicysIntoDb = async (payload: TPrivacyPolicy) => {
   try {
     const privacyPolicyText = payload.PrivacyPolicy?.trim() ?? "";
 
@@ -194,69 +194,64 @@ const updateHomePageSection2IntoDb = async (
 ) => {
   try {
     const { title, subtitle, imageoneFile, imagetwoFile, imagethreeFile } = payload;
-    
-    // Handle image uploads to Cloudinary
-    let imageoneUrl = '';
-    let imagetwoUrl = '';
-    let imagethreeUrl = '';
 
-    // Upload imageone to Cloudinary
+    // Prepare update object with only provided fields
+    const updateData: any = {};
+
+    if (title !== undefined) updateData['homepagesection2.title'] = title;
+    if (subtitle !== undefined) updateData['homepagesection2.subtitle'] = subtitle;
+
+    // Upload imageone to Cloudinary if provided
     if (imageoneFile && imageoneFile.buffer) {
       const timestamp = Date.now();
       const randomString = Math.random().toString(36).substring(2, 8);
       const filename = `homepage-section2-imageone-${timestamp}-${randomString}`;
-      
+
       const uploaded = await uploadBufferToCloudinary(
         imageoneFile.buffer,
         'homepage-section-2',
         'high',
         filename
       );
-      
-      imageoneUrl = uploaded.secure_url;
+
+      updateData['homepagesection2.imageone'] = uploaded.secure_url;
     }
 
-    // Upload imagetwo to Cloudinary
+    // Upload imagetwo to Cloudinary if provided
     if (imagetwoFile && imagetwoFile.buffer) {
       const timestamp = Date.now();
       const randomString = Math.random().toString(36).substring(2, 8);
       const filename = `homepage-section2-imagetwo-${timestamp}-${randomString}`;
-      
+
       const uploaded = await uploadBufferToCloudinary(
         imagetwoFile.buffer,
         'homepage-section-2',
         'high',
         filename
       );
-      
-      imagetwoUrl = uploaded.secure_url;
+
+      updateData['homepagesection2.imagetwo'] = uploaded.secure_url;
     }
 
-    // Upload imagethree to Cloudinary
+    // Upload imagethree to Cloudinary if provided
     if (imagethreeFile && imagethreeFile.buffer) {
       const timestamp = Date.now();
       const randomString = Math.random().toString(36).substring(2, 8);
       const filename = `homepage-section2-imagethree-${timestamp}-${randomString}`;
-      
+
       const uploaded = await uploadBufferToCloudinary(
         imagethreeFile.buffer,
         'homepage-section-2',
         'high',
         filename
       );
-      
-      imagethreeUrl = uploaded.secure_url;
+
+      updateData['homepagesection2.imagethree'] = uploaded.secure_url;
     }
 
     const result = await socialMediaLinksAddressPhoneEmailTexts.findOneAndUpdate(
       {},
-      {
-        'homepagesection2.title': title,
-        'homepagesection2.subtitle': subtitle,
-        'homepagesection2.imageone': imageoneUrl,
-        'homepagesection2.imagetwo': imagetwoUrl,
-        'homepagesection2.imagethree': imagethreeUrl,
-      },
+      { $set: updateData },
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
 
@@ -276,22 +271,7 @@ const findByHomePageSection2IntoDb = async () => {
   try {
     const result = await socialMediaLinksAddressPhoneEmailTexts
       .findOne()
-      .select('-isDelete -createdAt -updatedAt');
-
-    // Transform the data to match the expected interface format
-    if (result) {
-      const transformedResult = {
-        homepagesection2: {
-          title: (result as any)['homepagesection2.title'] || '',
-          subtitle: (result as any)['homepagesection2.subtitle'] || '',
-          imageone: (result as any)['homepagesection2.imageone'] || '',
-          imagetwo: (result as any)['homepagesection2.imagetwo'] || '',
-          imagethree: (result as any)['homepagesection2.imagethree'] || '',
-        }
-      };
-      
-      return transformedResult;
-    }
+      .select('homepagesection2');
 
     return result;
   } catch (error: any) {
