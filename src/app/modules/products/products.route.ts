@@ -77,6 +77,8 @@ router.post(
   },
   ProductControllers.createProduct
 );
+
+
 router.put(
   "/:id",
   auth(USER_ROLE.admin, USER_ROLE.superAdmin),

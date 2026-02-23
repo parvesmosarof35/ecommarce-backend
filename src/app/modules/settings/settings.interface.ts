@@ -66,6 +66,9 @@ export interface TSocialMediaLinksAddressPhoneEmailTexts {
   homepagesection2: {
     title: string;
     subtitle: string;
+    imageone?: string;
+    imagetwo?: string;
+    imagethree?: string;
   };
   homepagesection3: {
     title: string;

@@ -74,6 +74,9 @@ const SocalMediaLinksAddressPhoneEmailTextsValidationSchema = z.object({
       .object({
         title: z.string().optional(),
         subtitle: z.string().optional(),
+        imageone: z.string().optional(),
+        imagetwo: z.string().optional(),
+        imagethree: z.string().optional(),
       })
       .optional(),
     homepagesection3: z

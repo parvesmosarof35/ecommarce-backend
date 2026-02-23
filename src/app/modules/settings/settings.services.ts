@@ -12,7 +12,7 @@ import {
   TSocialMediaLinksAddressPhoneEmailTexts,
 } from './settings.interface';
 import AppError from '../../errors/AppError';
-
+import { uploadBufferToCloudinary } from '../../utils/cloudinary';
 
 const updateAboutUsIntoDb = async (payload: TAboutUs) => {
   try {
@@ -188,6 +188,121 @@ const findBySocalMediaLinksAddressPhoneEmailTextsIntoDb = async () => {
 };
 
 
+const updateHomePageSection2IntoDb = async (
+  payload: any,
+  files: any
+) => {
+  try {
+    const { title, subtitle, imageoneFile, imagetwoFile, imagethreeFile } = payload;
+    
+    // Handle image uploads to Cloudinary
+    let imageoneUrl = '';
+    let imagetwoUrl = '';
+    let imagethreeUrl = '';
+
+    // Upload imageone to Cloudinary
+    if (imageoneFile && imageoneFile.buffer) {
+      const timestamp = Date.now();
+      const randomString = Math.random().toString(36).substring(2, 8);
+      const filename = `homepage-section2-imageone-${timestamp}-${randomString}`;
+      
+      const uploaded = await uploadBufferToCloudinary(
+        imageoneFile.buffer,
+        'homepage-section-2',
+        'high',
+        filename
+      );
+      
+      imageoneUrl = uploaded.secure_url;
+    }
+
+    // Upload imagetwo to Cloudinary
+    if (imagetwoFile && imagetwoFile.buffer) {
+      const timestamp = Date.now();
+      const randomString = Math.random().toString(36).substring(2, 8);
+      const filename = `homepage-section2-imagetwo-${timestamp}-${randomString}`;
+      
+      const uploaded = await uploadBufferToCloudinary(
+        imagetwoFile.buffer,
+        'homepage-section-2',
+        'high',
+        filename
+      );
+      
+      imagetwoUrl = uploaded.secure_url;
+    }
+
+    // Upload imagethree to Cloudinary
+    if (imagethreeFile && imagethreeFile.buffer) {
+      const timestamp = Date.now();
+      const randomString = Math.random().toString(36).substring(2, 8);
+      const filename = `homepage-section2-imagethree-${timestamp}-${randomString}`;
+      
+      const uploaded = await uploadBufferToCloudinary(
+        imagethreeFile.buffer,
+        'homepage-section-2',
+        'high',
+        filename
+      );
+      
+      imagethreeUrl = uploaded.secure_url;
+    }
+
+    const result = await socialMediaLinksAddressPhoneEmailTexts.findOneAndUpdate(
+      {},
+      {
+        'homepagesection2.title': title,
+        'homepagesection2.subtitle': subtitle,
+        'homepagesection2.imageone': imageoneUrl,
+        'homepagesection2.imagetwo': imagetwoUrl,
+        'homepagesection2.imagethree': imagethreeUrl,
+      },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    );
+
+    return result
+      ? { status: true, message: 'Home Page Section 2 successfully saved' }
+      : { status: false, message: 'Failed to save Home Page Section 2' };
+  } catch (error: any) {
+    throw new AppError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      'Failed to save Home Page Section 2 into DB',
+      error,
+    );
+  }
+};
+
+const findByHomePageSection2IntoDb = async () => {
+  try {
+    const result = await socialMediaLinksAddressPhoneEmailTexts
+      .findOne()
+      .select('-isDelete -createdAt -updatedAt');
+
+    // Transform the data to match the expected interface format
+    if (result) {
+      const transformedResult = {
+        homepagesection2: {
+          title: (result as any)['homepagesection2.title'] || '',
+          subtitle: (result as any)['homepagesection2.subtitle'] || '',
+          imageone: (result as any)['homepagesection2.imageone'] || '',
+          imagetwo: (result as any)['homepagesection2.imagetwo'] || '',
+          imagethree: (result as any)['homepagesection2.imagethree'] || '',
+        }
+      };
+      
+      return transformedResult;
+    }
+
+    return result;
+  } catch (error: any) {
+    throw new AppError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      'Failed to find Home Page Section 2 in db',
+      error,
+    );
+  }
+};
+
 const SettingServices = {
   updateAboutUsIntoDb,
   findByAboutUsIntoDb,
@@ -197,6 +312,8 @@ const SettingServices = {
   findBytermsConditionsIntoDb,
   socalMediaLinksAddressPhoneEmailTextsIntoDb,
   findBySocalMediaLinksAddressPhoneEmailTextsIntoDb,
+  updateHomePageSection2IntoDb,
+  findByHomePageSection2IntoDb,
 };
 
 

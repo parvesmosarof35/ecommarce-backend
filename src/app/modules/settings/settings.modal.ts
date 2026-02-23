@@ -98,6 +98,9 @@ const SocialMediaLinksAddressPhoneEmailTextsSchema = new Schema<
     homepagesection2: {
       title: { type: String, default: '' },
       subtitle: { type: String, default: '' },
+      imageone: { type: String, default: '' },
+      imagetwo: { type: String, default: '' },
+      imagethree: { type: String, default: '' },
     },
     homepagesection3: {
       title: { type: String, default: '' },

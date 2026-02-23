@@ -95,6 +95,33 @@ const findBySocalMediaLinksAddressPhoneEmailTexts: RequestHandler = catchAsync(
   },
 );
 
+const updateHomePageSection2: RequestHandler = catchAsync(
+  async (req, res) => {
+    const result = await SettingServices.updateHomePageSection2IntoDb(
+      req.body,
+      req.files
+    );
+
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: "Successfully Updated Home Page Section 2",
+      data: result,
+    });
+  },
+);
+
+const findByHomePageSection2: RequestHandler = catchAsync(
+  async (req, res) => {
+    const result = await SettingServices.findByHomePageSection2IntoDb();
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: "Successfully Found Home Page Section 2",
+      data: result,
+    });
+  },
+);
 
 const SettingController = {
   updateAboutUs,
@@ -104,10 +131,9 @@ const SettingController = {
   termsConditions,
   findByTermsConditions,
   socalMediaLinksAddressPhoneEmailTexts,
-
   findBySocalMediaLinksAddressPhoneEmailTexts,
+  updateHomePageSection2,
+  findByHomePageSection2,
 };
-
-
 
 export default SettingController;
