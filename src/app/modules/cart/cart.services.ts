@@ -16,7 +16,7 @@ const addToCartIntoDb = async (payload: ICart) => {
   }
 
   // Check if product is in stock
-  if (productData.stock_quantity < payload.quantity) {
+  if ((productData.stock_quantity ?? 0) < payload.quantity) {
     throw new Error("Insufficient stock");
   }
 
@@ -29,21 +29,21 @@ const addToCartIntoDb = async (payload: ICart) => {
   if (existingCartItem) {
     // Update quantity if item exists
     const newQuantity = existingCartItem.quantity + payload.quantity;
-    
+
     // Check stock again for new quantity
-    if (productData.stock_quantity < newQuantity) {
+    if ((productData.stock_quantity ?? 0) < newQuantity) {
       throw new Error("Insufficient stock for requested quantity");
     }
 
     const result = await cart.findByIdAndUpdate(
       existingCartItem._id,
-      { 
+      {
         quantity: newQuantity,
         price_at_addition: productData.price // Update price to current price
       },
       { new: true, runValidators: true }
     ).populate("product_id");
-    
+
     return result;
   } else {
     // Create new cart item with current product price
@@ -51,7 +51,7 @@ const addToCartIntoDb = async (payload: ICart) => {
       ...payload,
       price_at_addition: productData.price
     };
-    
+
     const result = await cart.create(cartItem);
     return await cart.findById(result._id).populate("product_id");
   }
@@ -122,7 +122,7 @@ const updateCartItemQuantity = async (productId: string, userId: string, quantit
 
   // Check product stock
   const productData = cartItem.product_id as any;
-  if (productData.stock_quantity < quantity) {
+  if ((productData.stock_quantity ?? 0) < quantity) {
     throw new Error("Insufficient stock");
   }
 
@@ -147,7 +147,7 @@ const removeFromCartByUserAndProduct = async (userId: string, productId: string)
     user_id: userId,
     product_id: productId
   });
-  
+
   return result;
 };
 
@@ -169,7 +169,7 @@ const deleteCartItemFromDb = async (id: string, userId: string) => {
   }
 
   const result = await cart.findByIdAndDelete(id);
-  
+
   return result;
 };
 
@@ -182,7 +182,7 @@ const clearUserCart = async (userId: string) => {
   const result = await cart.deleteMany({
     user_id: userId
   });
-  
+
   return result.deletedCount;
 };
 
@@ -192,7 +192,7 @@ const clearUserCart = async (userId: string) => {
  * @returns Promise<object> - Cart summary with totals
  */
 const getCartSummaryByUser = async (userId: string) => {
-  const cartItems = await cart.find({ 
+  const cartItems = await cart.find({
     user_id: userId
   }).populate("product_id");
 
