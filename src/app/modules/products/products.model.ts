@@ -17,7 +17,6 @@ const ProductSchema = new Schema<IProduct, ProductModel>(
     },
     description: {
       type: String,
-      required: [true, "Product description is required"],
     },
     price: {
       type: Number,
@@ -26,13 +25,10 @@ const ProductSchema = new Schema<IProduct, ProductModel>(
     },
     stock_quantity: {
       type: Number,
-      required: [true, "Stock quantity is required"],
       min: [0, "Stock cannot be negative"],
     },
     sku: {
       type: String,
-      required: [true, "SKU is required"],
-      unique: true,
       trim: true,
       uppercase: true,
     },

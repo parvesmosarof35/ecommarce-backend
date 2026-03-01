@@ -16,8 +16,16 @@ router.post(
   (req: Request, res: Response, next: NextFunction) => {
     try {
       if (req.body.data && typeof req.body.data === "string") {
-        req.body = JSON.parse(req.body.data);
+        const jsonData = JSON.parse(req.body.data);
+        req.body = { ...req.body, ...jsonData };
+        delete req.body.data;
       }
+
+      // In POST (Creation): if slug is empty, remove it to allow multiple collections with no slug
+      if (req.body.slug === "" || req.body.slug === "NaN") {
+        delete req.body.slug;
+      }
+
       next();
     } catch (error) {
       next(new AppError(status.BAD_REQUEST, "Invalid JSON data", ""));
@@ -32,8 +40,16 @@ router.put(
   (req: Request, res: Response, next: NextFunction) => {
     try {
       if (req.body.data && typeof req.body.data === "string") {
-        req.body = JSON.parse(req.body.data);
+        const jsonData = JSON.parse(req.body.data);
+        req.body = { ...req.body, ...jsonData };
+        delete req.body.data;
       }
+
+      // In PUT (Update): if slug is empty, set to null to signal the service layer to $unset it
+      if (req.body.slug === "" || req.body.slug === "NaN") {
+        req.body.slug = null;
+      }
+
       next();
     } catch (error) {
       next(new AppError(status.BAD_REQUEST, "Invalid JSON data", ""));

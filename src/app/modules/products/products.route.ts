@@ -14,22 +14,49 @@ router.post(
   (req, res, next) => {
     try {
       if (req.body.data && typeof req.body.data === "string") {
-        req.body = JSON.parse(req.body.data);
+        const jsonData = JSON.parse(req.body.data);
+        req.body = { ...req.body, ...jsonData };
+        delete req.body.data;
       }
 
-      // Parse numeric fields from strings
-      if (req.body.price && typeof req.body.price === "string") {
-        req.body.price = parseFloat(req.body.price);
+      // Parse numeric fields from strings - handling optionality and preventing NaN
+      if (req.body.price !== undefined && req.body.price !== "" && req.body.price !== "NaN") {
+        const parsedPrice = parseFloat(req.body.price as string);
+        if (!isNaN(parsedPrice)) {
+          req.body.price = parsedPrice;
+        } else {
+          delete req.body.price; // Keep old price if invalid
+        }
+      } else if (req.body.price === "" || req.body.price === "NaN") {
+        delete req.body.price;
       }
-      if (
-        req.body.stock_quantity &&
-        typeof req.body.stock_quantity === "string"
-      ) {
-        req.body.stock_quantity = parseInt(req.body.stock_quantity);
+
+      if (req.body.stock_quantity !== undefined && req.body.stock_quantity !== "" && req.body.stock_quantity !== "NaN") {
+        const parsedStock = parseInt(req.body.stock_quantity as any);
+        if (!isNaN(parsedStock)) {
+          req.body.stock_quantity = parsedStock;
+        } else {
+          req.body.stock_quantity = 0; // Default to 0 if invalid
+        }
+      } else if (req.body.stock_quantity === "" || req.body.stock_quantity === "NaN") {
+        req.body.stock_quantity = 0; // Default to 0 if empty
       }
+
+      // Handle optional SKU - Remove if empty to allow it to be optional in the DB
+      if (req.body.sku === "" || req.body.sku === "NaN" || req.body.sku === null) {
+        delete req.body.sku;
+      }
+
       if (req.body.isFeatured && typeof req.body.isFeatured === "string") {
         req.body.isFeatured =
           req.body.isFeatured === "true" || req.body.isFeatured === "1";
+      }
+
+      if (req.body.description && typeof req.body.description === "string") {
+        req.body.description = req.body.description.trim();
+        if (req.body.description === "") {
+          delete req.body.description;
+        }
       }
 
       // product_link handling
@@ -86,22 +113,49 @@ router.put(
   (req, res, next) => {
     try {
       if (req.body.data && typeof req.body.data === "string") {
-        req.body = JSON.parse(req.body.data);
+        const jsonData = JSON.parse(req.body.data);
+        req.body = { ...req.body, ...jsonData };
+        delete req.body.data;
       }
 
-      // Parse numeric fields from strings
-      if (req.body.price && typeof req.body.price === "string") {
-        req.body.price = parseFloat(req.body.price);
+      // Parse numeric fields from strings - handling optionality and preventing NaN
+      if (req.body.price !== undefined && req.body.price !== "" && req.body.price !== "NaN") {
+        const parsedPrice = parseFloat(req.body.price as string);
+        if (!isNaN(parsedPrice)) {
+          req.body.price = parsedPrice;
+        } else {
+          delete req.body.price; // Keep old price if invalid
+        }
+      } else if (req.body.price === "" || req.body.price === "NaN") {
+        delete req.body.price;
       }
-      if (
-        req.body.stock_quantity &&
-        typeof req.body.stock_quantity === "string"
-      ) {
-        req.body.stock_quantity = parseInt(req.body.stock_quantity);
+
+      if (req.body.stock_quantity !== undefined && req.body.stock_quantity !== "" && req.body.stock_quantity !== "NaN") {
+        const parsedStock = parseInt(req.body.stock_quantity as any);
+        if (!isNaN(parsedStock)) {
+          req.body.stock_quantity = parsedStock;
+        } else {
+          req.body.stock_quantity = 0; // Update to 0 if invalid
+        }
+      } else if (req.body.stock_quantity === "" || req.body.stock_quantity === "NaN") {
+        req.body.stock_quantity = 0; // Update to 0 if empty
       }
+
+      // Handle optional SKU - Remove if empty to allow it to be optional in the DB
+      if (req.body.sku === "" || req.body.sku === "NaN" || req.body.sku === null) {
+        delete req.body.sku;
+      }
+
       if (req.body.isFeatured && typeof req.body.isFeatured === "string") {
         req.body.isFeatured =
           req.body.isFeatured === "true" || req.body.isFeatured === "1";
+      }
+
+      if (req.body.description && typeof req.body.description === "string") {
+        req.body.description = req.body.description.trim();
+        if (req.body.description === "") {
+          req.body.description = null; // Signal service to clear
+        }
       }
 
       // product_link handling

@@ -283,6 +283,48 @@ const findByHomePageSection2IntoDb = async () => {
   }
 };
 
+const updateHomePageCollectionsIntoDb = async (payload: any) => {
+  try {
+    const { title, subtitle } = payload;
+    const updateData: any = {};
+
+    if (title !== undefined) updateData['homepageCollections.title'] = title;
+    if (subtitle !== undefined) updateData['homepageCollections.subtitle'] = subtitle;
+
+    const result = await socialMediaLinksAddressPhoneEmailTexts.findOneAndUpdate(
+      {},
+      { $set: updateData },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    );
+
+    return result
+      ? { status: true, message: 'Home Page Collections successfully saved' }
+      : { status: false, message: 'Failed to save Home Page Collections' };
+  } catch (error: any) {
+    throw new AppError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      'Failed to save Home Page Collections into DB',
+      error,
+    );
+  }
+};
+
+const findByHomePageCollectionsIntoDb = async () => {
+  try {
+    const result = await socialMediaLinksAddressPhoneEmailTexts
+      .findOne()
+      .select('homepageCollections');
+
+    return result;
+  } catch (error: any) {
+    throw new AppError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      'Failed to find Home Page Collections in db',
+      error,
+    );
+  }
+};
+
 const SettingServices = {
   updateAboutUsIntoDb,
   findByAboutUsIntoDb,
@@ -294,6 +336,8 @@ const SettingServices = {
   findBySocalMediaLinksAddressPhoneEmailTextsIntoDb,
   updateHomePageSection2IntoDb,
   findByHomePageSection2IntoDb,
+  updateHomePageCollectionsIntoDb,
+  findByHomePageCollectionsIntoDb,
 };
 
 

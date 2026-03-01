@@ -123,6 +123,33 @@ const findByHomePageSection2: RequestHandler = catchAsync(
   },
 );
 
+const updateHomePageCollections: RequestHandler = catchAsync(
+  async (req, res) => {
+    const result = await SettingServices.updateHomePageCollectionsIntoDb(
+      req.body
+    );
+
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: "Successfully Updated Home Page Collections",
+      data: result,
+    });
+  },
+);
+
+const findByHomePageCollections: RequestHandler = catchAsync(
+  async (req, res) => {
+    const result = await SettingServices.findByHomePageCollectionsIntoDb();
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: "Successfully Found Home Page Collections",
+      data: result,
+    });
+  },
+);
+
 const SettingController = {
   updateAboutUs,
   findByAboutUs,
@@ -134,6 +161,8 @@ const SettingController = {
   findBySocalMediaLinksAddressPhoneEmailTexts,
   updateHomePageSection2,
   findByHomePageSection2,
+  updateHomePageCollections,
+  findByHomePageCollections,
 };
 
 export default SettingController;

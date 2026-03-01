@@ -6,7 +6,7 @@
 // ### **Request Setup:**
 // - **Method**: `POST`
 // - **URL**: `http://localhost:5000/api/v1/products`
-// - **Headers**: 
+// - **Headers**:
 //   - `Authorization`: `Bearer YOUR_ADMIN_TOKEN`
 //   - `Content-Type`: `multipart/form-data`
 
@@ -62,7 +62,7 @@
 // ### **Request Setup:**
 // - **Method**: `GET`
 // - **URL**: `http://localhost:5000/api/v1/products`
-// - **Headers**: 
+// - **Headers**:
 //   - `Content-Type`: `application/json`
 
 // ### **Query Parameters (Optional):**
@@ -72,7 +72,7 @@
 
 // ### **Sorting Options:**
 // - **bestSelling**: Sort by stock quantity (high to low)
-// - **bestRating**: Sort by average rating (high to low) 
+// - **bestRating**: Sort by average rating (high to low)
 // - **priceLowToHigh**: Sort by price (low to high)
 // - **priceHighToLow**: Sort by price (high to low)
 // - **newest**: Sort by creation date (newest first)
@@ -118,7 +118,7 @@
 // ### **Request Setup:**
 // - **Method**: `GET`
 // - **URL**: `http://localhost:5000/api/v1/products/PRODUCT_ID_HERE`
-// - **Headers**: 
+// - **Headers**:
 //   - `Content-Type`: `application/json`
 
 // ### **Query Parameters (Optional for Reviews):**
@@ -174,7 +174,7 @@
 // ### **Request Setup:**
 // - **Method**: `PUT`
 // - **URL**: `http://localhost:5000/api/v1/products/PRODUCT_ID_HERE`
-// - **Headers**: 
+// - **Headers**:
 //   - `Authorization`: `Bearer YOUR_ADMIN_TOKEN`
 //   - `Content-Type`: `application/json`
 
@@ -217,12 +217,12 @@
 
 // ---
 
-// ## **DELETE /api/v1/products/:id - Delete Product** 
+// ## **DELETE /api/v1/products/:id - Delete Product**
 
 // ### **Request Setup:**
 // - **Method**: `DELETE`
 // - **URL**: `http://localhost:5000/api/v1/products/PRODUCT_ID_HERE`
-// - **Headers**: 
+// - **Headers**:
 //   - `Authorization`: `Bearer YOUR_ADMIN_TOKEN`
 
 // ### **Expected Response:**
@@ -249,7 +249,7 @@
 // ### **Request Setup:**
 // - **Method**: `GET`
 // - **URL**: `http://localhost:5000/api/v1/products/collection/COLLECTION_ID_HERE`
-// - **Headers**: 
+// - **Headers**:
 //   - `Content-Type`: `application/json`
 
 // ### **Query Parameters (Optional):**
@@ -289,8 +289,11 @@
 
 // ## **Important Notes:**
 
-// ### **Field Validations:**
-// - **sku**: Required, unique, automatically converted to uppercase
+// - **name**: Required
+// - **description**: Optional
+// - **price**: Required
+// - **sku**: Optional, unique, automatically converted to uppercase if provided
+// - **stock_quantity**: Optional number (minimum 0)
 // - **isFeatured**: Optional boolean, defaults to false
 // - **skintype**: Optional single value (case-sensitive) from: ["Dry", "Oily", "Combination", "Sensitive", "Normal"]
 // - **ingredients**: Optional array (case-sensitive) from: ["Hyaluronic Acid", "Vitamin C", "Retinol", "Niacinamide", "Peptides"]
@@ -304,7 +307,7 @@
 
 // ### **Business Logic:**
 // - **Hard Delete**: DELETE operation permanently removes products
-// - **SKU Validation**: SKUs must be unique and are stored in uppercase
+// - **SKU Validation**: If provided, SKUs must be unique and are stored in uppercase. Multiple products can exist without an SKU.
 // - **Image Handling**: Supports up to 8 image uploads
 // - **Form Data**: Create endpoint uses multipart/form-data for image uploads
 // - **JSON Data**: Update endpoint uses application/json

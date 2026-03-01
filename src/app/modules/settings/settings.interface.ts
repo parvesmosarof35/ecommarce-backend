@@ -70,6 +70,10 @@ export interface TSocialMediaLinksAddressPhoneEmailTexts {
     imagetwo?: string;
     imagethree?: string;
   };
+  homepageCollections: {
+    title: string;
+    subtitle: string;
+  };
   homepagesection3: {
     title: string;
     subtitle: string;

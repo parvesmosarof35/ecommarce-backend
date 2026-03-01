@@ -31,7 +31,7 @@ const createProductIntoDb = async (payload: any) => {
           // Delete temporary file after upload
           try {
             fs.unlinkSync(file.path);
-          } catch {}
+          } catch { }
 
           return uploaded;
         }
@@ -45,7 +45,7 @@ const createProductIntoDb = async (payload: any) => {
     const result = await product.create(productData);
     return result;
   } catch (error: any) {
-    throw new Error(error.message || "Failed to create product");
+    throw error;
   }
 };
 
@@ -328,7 +328,7 @@ const updateProductIntoDb = async (id: string, payload: any) => {
           // Delete temporary file after upload
           try {
             fs.unlinkSync(file.path);
-          } catch {}
+          } catch { }
 
           return uploaded;
         }
@@ -349,22 +349,36 @@ const updateProductIntoDb = async (id: string, payload: any) => {
           );
           await Promise.all(deletePromises);
         }
-      } catch {}
+      } catch { }
     }
 
-    // Find and update product with:
-    // - new: true returns the updated document
-    // - runValidators: true ensures schema validation on update
-    // - populate collections to show updated collection details
+    // Prepare the update object
+    // Mongoose handles $set and $unset separately for fine-grained control
+    const updateQuery: any = { $set: updateData };
+
+    // If SKU or description is null, it means we want to clear/remove the field from the document
+    if (updateData.sku === null || updateData.description === null) {
+      if (updateData.sku === null) {
+        delete updateData.sku;
+        if (!updateQuery.$unset) updateQuery.$unset = {};
+        updateQuery.$unset.sku = "";
+      }
+      if (updateData.description === null) {
+        delete updateData.description;
+        if (!updateQuery.$unset) updateQuery.$unset = {};
+        updateQuery.$unset.description = "";
+      }
+    }
+
     const result = await product
-      .findByIdAndUpdate(id, updateData, {
+      .findByIdAndUpdate(id, updateQuery, {
         new: true,
         runValidators: true,
       })
       .populate("collections");
     return result;
   } catch (error: any) {
-    throw new Error(error.message || "Failed to update product");
+    throw error;
   }
 };
 
@@ -416,7 +430,7 @@ const getProductsByCollection = async (collectionId: string, query: any) => {
 const getRelatedProducts = async (productId: string, query: any = {}) => {
   // First, get the current product to understand its attributes
   const currentProduct = await product.findById(productId);
-  
+
   if (!currentProduct) {
     return {
       result: [],
@@ -432,21 +446,21 @@ const getRelatedProducts = async (productId: string, query: any = {}) => {
   // Build query to find related products
   // Priority: Same category > Same skin type > Same ingredients
   const orConditions = [];
-  
+
   // Add condition for same categories
   if (currentProduct.categories && currentProduct.categories.length > 0) {
     orConditions.push({
       categories: { $in: currentProduct.categories }
     });
   }
-  
+
   // Add condition for same skin type
   if (currentProduct.skintype) {
     orConditions.push({
       skintype: currentProduct.skintype
     });
   }
-  
+
   // Add condition for same ingredients
   if (currentProduct.ingredients && currentProduct.ingredients.length > 0) {
     orConditions.push({
@@ -466,7 +480,7 @@ const getRelatedProducts = async (productId: string, query: any = {}) => {
   const skip = (page - 1) * limit;
 
   const result = await relatedProductsQuery.skip(skip).limit(limit);
-  
+
   // Add rating data to each related product
   const productsWithRatings = await Promise.all(
     result.map(async (product: any) => {
@@ -506,7 +520,7 @@ const getRelatedProducts = async (productId: string, query: any = {}) => {
 const getFeaturedProducts = async (query: any) => {
   // Set isFeatured filter to true to get only featured products
   const featuredQuery = { ...query, isFeatured: "true" };
-  
+
   // Use the existing getAllProductsFromDb method with the featured filter
   return await getAllProductsFromDb(featuredQuery);
 };
@@ -522,7 +536,7 @@ const searchProducts = async (searchTerm: string) => {
   }
 
   const searchRegex = new RegExp(searchTerm, 'i'); // Case-insensitive search
-  
+
   return await product
     .find({
       name: { $regex: searchRegex },

@@ -28,13 +28,13 @@ const createCollectionIntoDb = async (req: RequestWithFile) => {
 
       try {
         fs.unlinkSync(req.file?.path as string);
-      } catch {}
+      } catch { }
     }
 
     const result = await collection.create(data);
     return result;
   } catch (error: any) {
-    throw new Error(error.message || "Failed to create collection");
+    throw error;
   }
 };
 
@@ -104,13 +104,22 @@ const updateCollectionIntoDb = async (req: RequestWithFile, id: string) => {
 
       try {
         fs.unlinkSync(req.file?.path as string);
-      } catch {}
+      } catch { }
 
       try {
         if (existingCollection?.imagePublicId) {
           await deleteFromCloudinary(existingCollection.imagePublicId);
         }
-      } catch {}
+      } catch { }
+    }
+
+    // Prepare the update object
+    const updateQuery: any = { $set: data };
+
+    // If slug is null, it means we want to clear/remove the field from the document
+    if (data.slug === null) {
+      delete data.slug;
+      updateQuery.$unset = { slug: "" };
     }
 
     // Find and update collection with:
@@ -118,14 +127,14 @@ const updateCollectionIntoDb = async (req: RequestWithFile, id: string) => {
     // - runValidators: true ensures schema validation on update
     // - populate products to show updated product details
     const result = await collection
-      .findByIdAndUpdate(id, data, {
+      .findByIdAndUpdate(id, updateQuery, {
         new: true,
         runValidators: true,
       })
       .populate("products");
     return result;
   } catch (error: any) {
-    throw new Error(error.message || "Failed to update collection");
+    throw error;
   }
 };
 

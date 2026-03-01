@@ -83,7 +83,7 @@ routes.post(
       // Handle uploaded images - pass file objects to service for Cloudinary upload
       if (req.files) {
         const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-        
+
         if (files.imageone && files.imageone[0]) {
           req.body.imageoneFile = files.imageone[0];
         }

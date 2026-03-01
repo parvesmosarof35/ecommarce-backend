@@ -23,10 +23,10 @@ export type SortOption =
 export interface IProduct extends Document {
   id: string;
   name: string;
-  description: string;
+  description?: string;
   price: number;
-  stock_quantity: number;
-  sku: string; // Stock Keeping Unit
+  stock_quantity?: number;
+  sku?: string; // Stock Keeping Unit
   product_link?: string; // Product link
   isFeatured?: boolean; // Featured product flag
   images_urls: string[];

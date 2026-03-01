@@ -4,7 +4,7 @@ import { Request } from "express";
 export interface ICollection extends Document {
   id: string;
   name: string;
-  slug: string;
+  slug?: string;
   image_url?: string;
   imagePublicId?: string;
   products?: string[];

@@ -12,8 +12,6 @@ const CollectionSchema = new Schema<ICollection, CollectionModel>(
     },
     slug: {
       type: String,
-      required: [true, "Collection slug is required"],
-      unique: true,
       lowercase: true,
       trim: true,
     },
