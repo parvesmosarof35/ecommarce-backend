@@ -63,6 +63,13 @@ const SocialMediaLinksAddressPhoneEmailTextsSchema = new Schema<
   SocialMediaLinksAddressPhoneEmailTextsModel
 >(
   {
+    navbarlinks: [
+      {
+        title: { type: String, default: '' },
+        url: { type: String, default: '' },
+        isActive: { type: Boolean, default: true },
+      },
+    ],
     instagram: {
       url: { type: String, default: '' },
       isActive: { type: Boolean, default: true },

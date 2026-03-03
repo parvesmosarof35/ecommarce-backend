@@ -31,6 +31,13 @@ export interface TermsConditionsModel extends Model<TTermsConditions> {
 }
 
 export interface TSocialMediaLinksAddressPhoneEmailTexts {
+  // navbar links
+  navbarlinks: {
+    title: string;
+    url: string;
+    isActive: boolean;
+  }[];
+  // social media links
   instagram: {
     url: string;
     isActive: boolean;

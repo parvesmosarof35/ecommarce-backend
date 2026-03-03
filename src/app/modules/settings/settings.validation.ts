@@ -22,6 +22,15 @@ const TermsConditionsValidationSchema = z.object({
 
 const SocalMediaLinksAddressPhoneEmailTextsValidationSchema = z.object({
   body: z.object({
+    navbarlinks: z
+      .array(
+        z.object({
+          title: z.string().optional(),
+          url: z.string().optional(),
+          isActive: z.boolean().optional(),
+        }),
+      )
+      .optional(),
     instagram: z
       .object({
         url: z.string().optional(),

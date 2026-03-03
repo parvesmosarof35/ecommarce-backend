@@ -14,6 +14,8 @@ const CollectionSchema = new Schema<ICollection, CollectionModel>(
       type: String,
       lowercase: true,
       trim: true,
+      unique: true,
+      sparse: true,
     },
     image_url: {
       type: String,

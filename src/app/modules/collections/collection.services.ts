@@ -31,6 +31,11 @@ const createCollectionIntoDb = async (req: RequestWithFile) => {
       } catch { }
     }
 
+    // Handle optional slug: if null or empty string, remove it from data to avoid duplicate key error
+    if (data.slug === null || data.slug === "" || data.slug === undefined) {
+      delete data.slug;
+    }
+
     const result = await collection.create(data);
     return result;
   } catch (error: any) {
@@ -116,8 +121,8 @@ const updateCollectionIntoDb = async (req: RequestWithFile, id: string) => {
     // Prepare the update object
     const updateQuery: any = { $set: data };
 
-    // If slug is null, it means we want to clear/remove the field from the document
-    if (data.slug === null) {
+    // If slug is null or empty string, it means we want to clear/remove the field from the document
+    if (data.slug === null || data.slug === "" || data.slug === undefined) {
       delete data.slug;
       updateQuery.$unset = { slug: "" };
     }
