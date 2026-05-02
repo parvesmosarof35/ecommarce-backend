@@ -130,6 +130,11 @@ const SocialMediaLinksAddressPhoneEmailTextsSchema = new Schema<
       Gotodetailstext: { type: String, default: '' },
       relatedproducttext: { type: String, default: '' },
     },
+    popuptext: {
+      title: { type: String, default: '' },
+      subtitle: { type: String, default: '' },
+      isActive: { type: Boolean, default: false },
+    },
     isDelete: {
       type: Boolean,
       default: false,

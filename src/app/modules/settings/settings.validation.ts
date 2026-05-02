@@ -119,6 +119,13 @@ const SocalMediaLinksAddressPhoneEmailTextsValidationSchema = z.object({
         relatedproducttext: z.string().optional(),
       })
       .optional(),
+    popuptext: z
+      .object({
+        title: z.string().optional(),
+        subtitle: z.string().optional(),
+        isActive: z.boolean().optional(),
+      })
+      .optional(),
   }),
 });
 

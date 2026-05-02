@@ -98,6 +98,11 @@ export interface TSocialMediaLinksAddressPhoneEmailTexts {
     Gotodetailstext: string;
     relatedproducttext: string;
   };
+  popuptext?: {
+    title: string;
+    subtitle: string;
+    isActive: boolean;
+  };
   isDelete: boolean;
 }
 

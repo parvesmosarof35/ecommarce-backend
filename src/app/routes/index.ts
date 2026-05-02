@@ -14,6 +14,8 @@ import PaymentRoutes from "../modules/payment/payment.routes";
 import OrderRoutes from "../modules/order/order.routes";
 import { DashboardRoutes } from "../modules/dashboardstats/dashboard.router";
 import heroRouter from "../modules/hero/hero.routes";
+import { SubscriberRoutes } from "../modules/subscriber/subscriber.route";
+import { AnalyticsRoutes } from "../modules/analytics/analytics.route";
 
 
 
@@ -79,6 +81,14 @@ const moduleRoutes = [
   {
     path: "/dashboard",
     route: DashboardRoutes,
+  },
+  {
+    path: "/subscriber",
+    route: SubscriberRoutes,
+  },
+  {
+    path: "/analytics",
+    route: AnalyticsRoutes,
   },
 ];
 

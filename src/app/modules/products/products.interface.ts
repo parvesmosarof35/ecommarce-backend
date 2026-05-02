@@ -35,6 +35,10 @@ export interface IProduct extends Document {
   skintype?: SkinType; // Single skin type from predefined options (case-sensitive)
   ingredients?: KeyIngredient[]; // Array of key ingredients from predefined options (case-sensitive)
   collections?: string[]; // Array of collection IDs (optional)
+  visitCount?: number;
+  clickCount?: number;
+  cartAddCount?: number;
+  wishlistAddCount?: number;
 }
 
 export type ProductModel = {
